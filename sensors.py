@@ -1,10 +1,13 @@
 import random
 import datetime
 
-class SensorRoleEnum:
-    NORMAL = 'NORMAL'
-    UNINPORTANT = 'UNIMPORTANT'
-    CRITICAL = 'CRITICAL'
+from enum import Enum
+
+
+class SensorRoleEnum(Enum):
+    CRITICAL = 0
+    NORMAL = 1
+    UNINPORTANT = 2
 
 class Sensor:
     def __init__(self, sensor_id, sensor_type, role):

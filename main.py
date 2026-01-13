@@ -1,4 +1,5 @@
 import uuid
+import random
 from simulator import SimulationEngine
 from sensors import Sensor, SensorRoleEnum
 from broker import Broker
@@ -13,7 +14,7 @@ if __name__ == "__main__":
         sensor = Sensor(
             sensor_id=uuid.uuid4(),
             sensor_type='Temperature',
-            role=SensorRoleEnum.NORMAL
+            role=random.choice(list(SensorRoleEnum))
         )
         simulator.add_sensor(sensor)
         broker.subscribe(sensor)
@@ -21,7 +22,9 @@ if __name__ == "__main__":
     while True:
 
         for sensor in simulator.sensors:
-            broker.publish(sensor.sensor_id, sensor.send_data())
+            broker.publish(sensor.sensor_id, sensor.role, sensor.send_data())
+
+        broker.process_messages()
 
         simulator.update_global_state()
         print(f"Current Global State: {simulator.state}")
