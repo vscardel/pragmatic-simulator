@@ -24,7 +24,7 @@ class Broker:
                 self.queue,
                 (sensor_role.value, next(self._counter), data)
             )
-            print(f"Published data: {data} from sensor ID: {sensor_id}")
+            # print(f"Published data: {data} from sensor ID: {sensor_id}")
             return True
         print("Sensor not subscribed to broker.")
         return False

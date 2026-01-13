@@ -25,7 +25,9 @@ class Sensor:
         return random.uniform(0, 100)
 
     def send_data(self):
-        return {'sensor_id': self.sensor_id,
+        num_messages = random.randint(1, 10)
+        messages = [{'sensor_id': self.sensor_id,
                 'sensor_type': self.sensor_type,
                 'sensor_value': self.read_value(),
-                'timestamp': datetime.datetime.now().timestamp()}
+                'timestamp': datetime.datetime.now().timestamp()} for _ in range(num_messages)]
+        return messages
