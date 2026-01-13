@@ -24,7 +24,10 @@ if __name__ == "__main__":
         for sensor in simulator.sensors:
             broker.publish(sensor.sensor_id, sensor.role, sensor.send_data())
 
-        broker.process_messages()
+        messages = broker.flush()
+        # this will need to modulate the transition probabilities for the messages to matter
+        # to the environment
+        simulator.step(messages)
 
         simulator.update_global_state()
         print(f"Current Global State: {simulator.state}")

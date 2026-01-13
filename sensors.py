@@ -18,6 +18,9 @@ class Sensor:
     def get_true_role(self):
         return self.role
 
+    def observe(self, state):
+        pass
+
     def read_value(self):
         return random.uniform(0, 100)
 

@@ -62,3 +62,8 @@ class SimulationEngine():
 
     def add_sensor(self, sensor):
         self.sensors.append(sensor)
+
+    def step(self, messages):
+        # for now, just print and ignore the messages
+        for priority, count, data in messages:
+            print(f"Processing message with priority {priority}: {data}")

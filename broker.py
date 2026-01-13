@@ -29,7 +29,9 @@ class Broker:
         print("Sensor not subscribed to broker.")
         return False
 
-    def process_messages(self):
+    def flush(self):
+        msgs = []
         while self.queue:
-            message = heapq.heappop(self.queue)
-            print(f"Processing message: {message} with priority {message[0]}")
+            msgs.append(heapq.heappop(self.queue))
+        return msgs
+
