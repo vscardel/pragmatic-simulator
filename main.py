@@ -21,14 +21,15 @@ if __name__ == "__main__":
 
     while True:
 
-        for sensor in simulator.sensors:
+        for id, sensor in simulator.sensors.items():
+
             current_sensors_messages = sensor.send_data()
+            # publish each generated message to broker
             for message in current_sensors_messages:
-                broker.publish(sensor.sensor_id, sensor.role, sensor.send_data())
+                broker.publish(sensor.sensor_id, sensor.role, message)
 
         messages = broker.flush()
         # this will need to modulate the transition probabilities for the messages to matter
         # to the environment
         simulator.step(messages)
-        simulator.update_global_state()
         time.sleep(0.5)
