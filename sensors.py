@@ -3,7 +3,12 @@ import datetime
 import uuid
 from enum import Enum
 from typing import Literal
-from simulator import GlobalStateEnum
+
+class SensorStateEnum(Enum):
+    NORMAL = 'NORMAL'
+    DEGRADED = 'DEGRADED'
+    CRITICAL = 'CRITICAL'
+    FAILURE = 'FAILURE'
 
 class SensorRoleEnum(Enum):
     CRITICAL = 0
@@ -21,7 +26,7 @@ class SensorTypeEnum(Enum):
 class Sensor:
     def __init__(self,
                  sensor_id: uuid.UUID,
-                 sensor_type: str,
+                 sensor_type: SensorTypeEnum,
                  role: SensorRoleEnum,  # A relevância do sensor
                  operating_range: dict[Literal["normal", "degraded", "critical"], tuple[int, int]],
                  mean_value: float,
@@ -33,25 +38,25 @@ class Sensor:
         self.operating_range = operating_range
         self.mean_value = mean_value
         self.standard_deviation = (operating_range['normal'][1] - operating_range['normal'][0]) / 2
-        self.local_state = GlobalStateEnum.NORMAL
+        self.local_state = SensorStateEnum.NORMAL
         self.__initialize_transition_probabilities()
 
 
     def __initialize_transition_probabilities(self):
         self.transition_probabilities = {
-            GlobalStateEnum.NORMAL: {
-                GlobalStateEnum.DEGRADED: 0.1
+            SensorStateEnum.NORMAL: {
+                SensorStateEnum.DEGRADED: 0.1
             },
-            GlobalStateEnum.DEGRADED: {
-                GlobalStateEnum.CRITICAL: 0.2,
-                GlobalStateEnum.NORMAL: 0.4
+            SensorStateEnum.DEGRADED: {
+                SensorStateEnum.CRITICAL: 0.2,
+                SensorStateEnum.NORMAL: 0.4
             },
-            GlobalStateEnum.CRITICAL: {
-                GlobalStateEnum.FAILURE: 0.3,
-                GlobalStateEnum.DEGRADED: 0.5
+            SensorStateEnum.CRITICAL: {
+                SensorStateEnum.FAILURE: 0.3,
+                SensorStateEnum.DEGRADED: 0.5
             },
-            GlobalStateEnum.FAILURE: {
-                GlobalStateEnum.CRITICAL: 0.6
+            SensorStateEnum.FAILURE: {
+                SensorStateEnum.CRITICAL: 0.6
             }
         }
 
@@ -74,7 +79,7 @@ class Sensor:
         messages = [
             {
                 'sensor_id': self.sensor_id,
-                'sensor_type': self.sensor_type,
+                'sensor_type': self.sensor_type.value,
                 'sensor_value': self.read_value(),
                 'timestamp': datetime.datetime.now().timestamp()
             } for _ in range(num_messages)
