@@ -1,25 +1,37 @@
 import uuid
 import random
 from simulator import SimulationEngine
-from sensors import Sensor, SensorRoleEnum
+from sensors import Sensor, SensorRoleEnum, SensorTypeEnum
 from broker import Broker
 import time
 
-if __name__ == "__main__":
-    simulator = SimulationEngine()
-    simulator.initialize_transition_probabilities() # Já faz isso na inicialização do "simulator"
-    broker = Broker()
+NUMBER_OF_SENSORS = 5
 
-    for i in range(5):
+
+
+def initialize_sensors(simulator: SimulationEngine, broker: Broker):
+    for _ in range(NUMBER_OF_SENSORS):
         sensor = Sensor(
             sensor_id=uuid.uuid4(),
-            sensor_type='Temperature',
-            role=random.choice(list(SensorRoleEnum))
-        )
+            sensor_type=random.choice(list(SensorTypeEnum)),
+            role=random.choice(list(SensorRoleEnum)),
+            operating_range={ # Valores mockados e estaticos, mudar depois
+                "normal": (50, 60),
+                "degraded": (40, 70),
+                "critical": (30, 95)
+            },
+            mean_value=55,
+        )   
         simulator.add_sensor(sensor)
         broker.subscribe(sensor)
+                
 
-    while True:
+if __name__ == "__main__":
+    simulator = SimulationEngine()
+    broker = Broker()
+    initialize_sensors(simulator, broker)
+
+    while True: # Passos de tempo
 
         for id, sensor in simulator.sensors.items():
 
