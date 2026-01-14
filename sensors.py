@@ -9,6 +9,14 @@ class SensorRoleEnum(Enum):
     NORMAL = 1
     UNINPORTANT = 2
 
+class SensorTypeEnum(Enum):
+    TEMPERATURE = 0
+    HUMIDITY = 1
+    PRESSURE = 2
+    LIGHT = 3
+    MOISTURE = 4
+    AIR_QUALITY = 5
+
 class Sensor:
     def __init__(self, sensor_id, sensor_type, role):
         self.sensor_id = sensor_id
