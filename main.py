@@ -1,35 +1,57 @@
 import uuid
 import random
-from simulator import SimulationEngine
-from sensors import Sensor, SensorRoleEnum
+from production_plant import ProductionPlant
+from sensors import Sensor, SensorRoleEnum, SensorTypeEnum
 from broker import Broker
 import time
+from globals import Globals
+from actuator import Actuator
 
-if __name__ == "__main__":
-    simulator = SimulationEngine()
-    simulator.initialize_transition_probabilities() # Já faz isso na inicialização do "simulator"
-    broker = Broker()
+NUMBER_OF_SENSORS = 5
+TIME_STEPS = 1000 # We can model it to be milliseconds
 
-    for i in range(5):
+
+def initialize_sensors(plant: ProductionPlant, broker: Broker):
+    for _ in range(NUMBER_OF_SENSORS):
+        
         sensor = Sensor(
             sensor_id=uuid.uuid4(),
-            sensor_type='Temperature',
-            role=random.choice(list(SensorRoleEnum))
-        )
-        simulator.add_sensor(sensor)
+            sensor_type=SensorTypeEnum.TEMPERATURE,
+            role=random.choice(list(SensorRoleEnum)),
+            operating_range={ # Valores mockados e estaticos, mudar depois
+                "normal": (50, 60),
+                "degraded": (40, 70),
+                "critical": (30, 95)
+            },
+            mean_value=55,
+            sampling_interval=random.randint(1, 5000) # Sensors that send data in a interval between 1 ms and 5 seconds
+        )  
+        plant.add_sensor(sensor)
         broker.subscribe(sensor)
+                
 
-    while True:
+if __name__ == "__main__":
+    plant = ProductionPlant()
+    broker = Broker()
+    actuator = Actuator(plant)
+    initialize_sensors(plant, broker)
 
-        for id, sensor in simulator.sensors.items():
+    for lt in range(TIME_STEPS): # Passos de tempo
+        Globals.time += 1
 
-            current_sensors_messages = sensor.send_data()
-            # publish each generated message to broker
-            for message in current_sensors_messages:
-                broker.publish(sensor.sensor_id, sensor.role, message)
+        for id, sensor in plant.sensors.items():
+            sensor.update_state_by_probabilities()
+            # sensor.adjust_probabilities_by_time_passing() # It will degradate over time (by the use)
+            
+            current_sensors_message = sensor.send_data()
+            if current_sensors_message is None:
+                continue
+            broker.publish(sensor.sensor_id, current_sensors_message)
 
+    
         messages = broker.flush()
         # this will need to modulate the transition probabilities for the messages to matter
         # to the environment
-        simulator.step(messages)
+        actuator.step(messages)
+        print(f"Global State: {actuator.global_state}")
         time.sleep(0.5)
