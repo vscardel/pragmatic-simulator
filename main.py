@@ -7,7 +7,7 @@ import time
 
 if __name__ == "__main__":
     simulator = SimulationEngine()
-    simulator.initialize_transition_probabilities()
+    simulator.initialize_transition_probabilities() # Já faz isso na inicialização do "simulator"
     broker = Broker()
 
     for i in range(5):

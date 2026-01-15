@@ -1,19 +1,21 @@
 import heapq
 import itertools
-
+import uuid
+from typing import Any
+from sensors import SensorRoleEnum, Sensor
 
 class Broker:
     def __init__(self):
-        self.subscribers = []
+        self.subscribers = [] # lista de sensores
         self.queue = []
         self.MAX_QUEUE_SIZE = 100
         self.DROPPED_MESSAGES_COUNT = 0
         self._counter = itertools.count()
 
-    def subscribe(self, sensor):
+    def subscribe(self, sensor: Sensor):
         self.subscribers.append(sensor.sensor_id)
 
-    def publish(self, sensor_id, sensor_role, data):
+    def publish(self, sensor_id: uuid.UUID, sensor_role: SensorRoleEnum, data: list[dict[str, Any]]) -> bool:
         if len(self.queue) > self.MAX_QUEUE_SIZE:
             self.DROPPED_MESSAGES_COUNT += 1
             print("Broker queue full. Dropping message.")
