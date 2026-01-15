@@ -25,7 +25,7 @@ def initialize_sensors(plant: ProductionPlant, broker: Broker):
             },
             mean_value=55,
             sampling_interval=random.randint(1, 5000) # Sensors that send data in a interval between 1 ms and 5 seconds
-        )   
+        )  
         plant.add_sensor(sensor)
         broker.subscribe(sensor)
                 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
         for id, sensor in plant.sensors.items():
             sensor.update_state_by_probabilities()
-            sensor.adjust_probabilities_by_time_passing() # It will degradate over time (by the use)
+            # sensor.adjust_probabilities_by_time_passing() # It will degradate over time (by the use)
             
             current_sensors_message = sensor.send_data()
             if current_sensors_message is None:

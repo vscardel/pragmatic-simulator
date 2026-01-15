@@ -83,15 +83,21 @@ class Sensor:
         for state, probability in possibly_states.items():
             if rand_value < probability:
                 self.local_state = state
+                # TODO: change mean_value
                 print(f"Sensor {self.sensor_id} updated state to {self.local_state}")
-                print(self.transition_probabilities)
+                print(f'NORMAL->DEGRADED: {self.transition_probabilities[SensorStateEnum.NORMAL][SensorStateEnum.DEGRADED]}')
+                print(f'DEGRADED->CRITICAL: {self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.CRITICAL]}')
+                print(f'DEGRADED->NORMAL: {self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.NORMAL]}')
+                print(f'CRITICAL->FAILURE: {self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.FAILURE]}')
+                print(f'CRITICAL->DEGRADED: {self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.DEGRADED]}')
                 time.sleep(1)
                 break
 
-    def maintain(self):
+    def upkeep(self):
         """
         Reset the transition probabilities to their original values.
         """
+        # TODO: increase the probabilities to go back to a better state
         self.transition_probabilities = self.original_transition_probabilities
 
     def get_true_role(self):

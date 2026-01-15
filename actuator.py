@@ -96,7 +96,7 @@ class Actuator:
             sumTop += ROLE_WEIGHT[sensor.get_true_role()] * sensor.local_state.value
             sumWeight += ROLE_WEIGHT[sensor.get_true_role()]
             
-        self.production_plant.set_state(sumTop / sumWeight)
+        self.production_plant.set_state(round(sumTop / sumWeight))
         self.global_state = (self.production_plant.state, self.load)
         
     def divide_messages_by_sensors(self, all_messages: list[tuple[int, int, dict]]):
@@ -117,7 +117,7 @@ class Actuator:
         
         return divided_messages_by_sensor
         
-    def update_sensors_state(self, all_messages: list[tuple[int, int, dict]]):
+    def update_sensors_transition_probabilities(self, all_messages: list[tuple[int, int, dict]]):
         rand_val = random.random()
         divided_messages_by_sensor = self.divide_messages_by_sensors(all_messages)
         
@@ -125,15 +125,15 @@ class Actuator:
         print(len(all_messages), end="\n-------")
         print(len(divided_messages_by_sensor))
         
-        load_term = min(1, self.load / self.THRESHOLD_LOAD * 0.5) # TODO: Ajustar isso
+        load_term = min(1, self.load / self.THRESHOLD_LOAD * 0.5) # TODO: adjust
                 
         t = False
                 
         for sensor_id, messages in divided_messages_by_sensor:
             msg_pressure = self.compute_message_pressure(messages)
-            msg_term = msg_pressure * 0.3 # TODO: Ajustar isso
+            msg_term = msg_pressure * 0.3 # TODO: adjust
             
-            prob_to_take_an_action = 1.0 - load_term + msg_term # TODO: Ajustar isso
+            prob_to_take_an_action = 1.0 - load_term + msg_term # TODO: adjust
             
             if (not t):
                 print(load_term, msg_pressure, msg_term, prob_to_take_an_action)
@@ -141,11 +141,11 @@ class Actuator:
             
             if rand_val < prob_to_take_an_action:
                 sensor = self.production_plant.get_sensor(sensor_id)
-                sensor.maintain()
+                sensor.upkeep()
 
     def step(self, messages: list[tuple[int, int, dict]]):
         self.load = len(messages)
         
-        self.update_sensors_state(messages)
+        self.update_sensors_transition_probabilities(messages)
         self.update_global_state()
         
