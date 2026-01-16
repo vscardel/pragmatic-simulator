@@ -1,5 +1,4 @@
 import random
-import datetime
 import uuid
 from enum import Enum
 from typing import Literal
@@ -104,6 +103,39 @@ class Sensor:
             self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.FAILURE] += 0.0004 # increase by 0.04%
             self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.DEGRADED] -= 0.0002 # decrease by 0.02%
         
+    def auto_set_mean_value(self):
+        normal_range = self.operating_range['normal'][1] - self.operating_range['normal'][0]
+        critical_range = self.operating_range['critical'][1] - self.operating_range['critical'][0]
+        
+        if self.local_state == SensorStateEnum.NORMAL:
+            self.mean_value = random.uniform(self.operating_range['normal'][0], self.operating_range['normal'][1])
+        elif self.local_state == SensorStateEnum.DEGRADED:
+            
+            self.mean_value = random.uniform(self.operating_range['degraded'][0], self.operating_range['degraded'][1] - normal_range)
+            if self.mean_value >= self.operating_range['normal'][0] and self.mean_value <= self.operating_range['normal'][1]:
+                self.mean_value += normal_range
+        elif self.local_state == SensorStateEnum.CRITICAL:
+            degraded_to_left = self.mean_value < self.operating_range['normal'][0]
+            if (degraded_to_left):
+                # Change mean value to the left of the degraded range
+                self.mean_value = random.uniform(self.operating_range['critical'][0], self.operating_range['degraded'][0])
+            else:
+                # Change mean value to the right of the degraded range
+                self.mean_value = random.uniform(self.operating_range['degraded'][1], self.operating_range['critical'][1])
+            
+        elif self.local_state == SensorStateEnum.FAILURE:
+            critical_to_left = self.mean_value < self.operating_range['normal'][0]
+            if (critical_to_left):
+                self.mean_value = random.normalvariate(self.operating_range['critical'][0], critical_range)
+                if self.mean_value >= self.operating_range['critical'][0]:
+                    self.mean_value = self.operating_range['critical'][0] + (self.operating_range['critical'][0] - self.mean_value)
+            else:
+                self.mean_value = random.normalvariate(self.operating_range['critical'][1], critical_range)
+                if self.mean_value <= self.operating_range['critical'][1]:
+                    self.mean_value = self.operating_range['critical'][1] - (self.mean_value - self.operating_range['critical'][1])
+                
+            
+        
     def update_state_by_probabilities(self):
         rand_value = random.uniform(0, 1)
         
@@ -113,7 +145,7 @@ class Sensor:
         for state, probability in possibly_states.items():
             if rand_value < probability:
                 self.local_state = state
-                # TODO: change mean_value
+                self.auto_set_mean_value()
                 print(f"Sensor {self.sensor_id} updated state to {self.local_state}")
                 print(f'NORMAL->DEGRADED: {self.transition_probabilities[SensorStateEnum.NORMAL][SensorStateEnum.DEGRADED]}')
                 print(f'DEGRADED->CRITICAL: {self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.CRITICAL]}')
