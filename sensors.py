@@ -38,12 +38,42 @@ class Sensor:
         self.sensor_type = sensor_type
         self.role = role
         self.operating_range = operating_range
+        if (not self.__operating_range_is_ok()):
+            raise Exception("Operating range is not valid")
         self.mean_value = mean_value
         self.standard_deviation = (operating_range['normal'][1] - operating_range['normal'][0]) / 2
         self.local_state = SensorStateEnum.NORMAL
         self.sampling_interval = sampling_interval
         self.__initialize_transition_probabilities()
 
+    def __operating_range_is_ok(self):
+        """
+        Checks if the operating range is valid.
+
+        A valid operating range must have 'normal', 'degraded', and 'critical' ranges.
+        Every range must be a range of two values (min, max).
+        The 'normal' range must be completely inside the 'degraded' range, and the 'degraded'
+        range must be completely inside the 'critical' range.
+
+        Returns:
+            bool: True if the operating range is valid, False otherwise.
+        """
+        if (self.operating_range['normal'][0] >= self.operating_range['normal'][1]):
+            return False
+        if (self.operating_range['degraded'][0] >= self.operating_range['degraded'][1]):
+            return False
+        if (self.operating_range['critical'][0] >= self.operating_range['critical'][1]):
+            return False
+        if (self.operating_range['degraded'][0] >= self.operating_range['normal'][0]):
+            return False
+        if (self.operating_range['degraded'][1] <= self.operating_range['normal'][1]):
+            return False
+        if (self.operating_range['critical'][0] >= self.operating_range['degraded'][0]):
+            return False
+        if (self.operating_range['critical'][1] <= self.operating_range['degraded'][1]):
+            return False
+        
+        return True
 
     def __initialize_transition_probabilities(self):
         self.original_transition_probabilities = { # Values when the machine is normal
