@@ -2,7 +2,6 @@ from production_plant import PlantStateEnum, ProductionPlant
 from globals import     Globals
 from sensors import SensorRoleEnum
 import random
-import uuid
 from collections import defaultdict
 
 STATE_SEVERITY = {
@@ -100,7 +99,7 @@ class Actuator:
         self.global_state = (self.production_plant.state, self.load)
         
     def divide_messages_by_sensors(self, all_messages: list[tuple[int, int, dict]]):
-        divided_messages_by_sensor: list[tuple[uuid.UUID,
+        divided_messages_by_sensor: list[tuple[int,
                                                list[tuple[int, int, dict]]]] = []
 
         grouped_dict = defaultdict(list)

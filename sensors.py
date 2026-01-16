@@ -1,5 +1,4 @@
 import random
-import uuid
 from enum import Enum
 from typing import Literal
 from globals import Globals
@@ -25,8 +24,10 @@ class SensorTypeEnum(Enum):
     AIR_QUALITY = 5
 
 class Sensor:
+    id = 0
+    
     def __init__(self,
-                 sensor_id: uuid.UUID,
+                 sensor_id: int,
                  sensor_type: SensorTypeEnum,
                  role: SensorRoleEnum,  # A relevância do sensor
                  operating_range: dict[Literal["normal", "degraded", "critical"], tuple[int, int]],
@@ -186,3 +187,8 @@ class Sensor:
             'timestamp': Globals.time
         }
         return message
+
+    @classmethod
+    def next_id(cls):
+        cls.id += 1
+        return cls.id

@@ -1,4 +1,3 @@
-import uuid
 import random
 from production_plant import ProductionPlant
 from sensors import Sensor, SensorRoleEnum, SensorTypeEnum
@@ -15,7 +14,7 @@ def initialize_sensors(plant: ProductionPlant, broker: Broker):
     for _ in range(NUMBER_OF_SENSORS):
         
         sensor = Sensor(
-            sensor_id=uuid.uuid4(),
+            sensor_id=Sensor.next_id(),
             sensor_type=SensorTypeEnum.TEMPERATURE,
             role=random.choice(list(SensorRoleEnum)),
             operating_range={ # Valores mockados e estaticos, mudar depois
@@ -54,4 +53,4 @@ if __name__ == "__main__":
         # to the environment
         actuator.step(messages)
         print(f"Global State: {actuator.global_state}")
-        time.sleep(0.5)
+        # time.sleep(0.5)
