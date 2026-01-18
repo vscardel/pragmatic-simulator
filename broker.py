@@ -26,6 +26,7 @@ class Broker:
         self.ROUND_DROPPED_MESSAGES_BY_FULL_QUEUE = 0
         self._counter = itertools.count()
 
+    # To publish, a sensor should be subscribed
     def subscribe(self, sensor: Sensor):
         self.subscribers.append(sensor.sensor_id)
 
@@ -50,6 +51,14 @@ class Broker:
         return True
 
     def print_queue_stats(self):
+        """
+        Prints the percentage of each sensor role and sensor in the broker queue.
+
+        Prints two tables: one with the percentage of messages of each sensor role in the broker queue
+        and another with the percentage of messages of each sensor in the broker queue.
+
+        :return: None
+        """
         total_items = len(self.queue)
 
         if total_items == 0:
