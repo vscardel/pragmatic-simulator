@@ -1,8 +1,7 @@
 from production_plant import PlantStateEnum, ProductionPlant
-from globals import     Globals
-from sensors import SensorRoleEnum
+from globals import Globals
+from sensors import SensorRoleEnum, SensorStateEnum
 import random
-from collections import defaultdict
 
 STATE_SEVERITY = {
     PlantStateEnum.NORMAL: 0,
@@ -23,6 +22,14 @@ ROLE_WEIGHT = {
     SensorRoleEnum.UNINPORTANT: 0.0,
 }
 
+RESET = "\033[0m"
+RED = "\033[31m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+BLUE = "\033[34m"
+MAGENTA = "\033[35m"
+CYAN = "\033[36m"
+
 class Actuator:
     THRESHOLD_LOAD = 50
     
@@ -30,6 +37,7 @@ class Actuator:
         self.load = 0
         self.production_plant = production_plant
         self.global_state = (production_plant.state, self.load)
+        self.sp = False  # "should print" TODO: remove it after debugging
     
     def compute_message_pressure(self, messages: list[tuple[int, int, dict]]):
         if not messages:
@@ -98,53 +106,59 @@ class Actuator:
         self.production_plant.set_state(round(sumTop / sumWeight))
         self.global_state = (self.production_plant.state, self.load)
         
-    def divide_messages_by_sensors(self, all_messages: list[tuple[int, int, dict]]):
-        divided_messages_by_sensor: list[tuple[int,
-                                               list[tuple[int, int, dict]]]] = []
-
-        grouped_dict = defaultdict(list)
-
-        for msg in all_messages:
-            # Desempacota a mensagem para pegar o data (índice 2)
-            _, _, data = msg
-            sensor_id = data.get('sensor_id')
-
-            if sensor_id:
-                grouped_dict[sensor_id].append(msg)
-
-        divided_messages_by_sensor = list(grouped_dict.items())
+    def compute_messages_impact(self, messages: list[tuple[int, int, dict]]) -> dict[int, float]:
+        """Returns a dict with the keys as the 
+        sensors_ids and the values as the sum 
+        of impact of the messages
+        """ 
         
-        return divided_messages_by_sensor
-        
-    def update_sensors_transition_probabilities(self, all_messages: list[tuple[int, int, dict]]):
-        rand_val = random.random()
-        divided_messages_by_sensor = self.divide_messages_by_sensors(all_messages)
-        
-        print(Globals.time, end="\n-------")
-        print(len(all_messages), end="\n-------")
-        print(len(divided_messages_by_sensor))
-        
-        load_term = min(1, self.load / self.THRESHOLD_LOAD * 0.5) # TODO: adjust
-                
-        t = False
-                
-        for sensor_id, messages in divided_messages_by_sensor:
-            msg_pressure = self.compute_message_pressure(messages)
-            msg_term = msg_pressure * 0.3 # TODO: adjust
+        messages_impact: dict[int, float] = {}
+
+        for inferred_role, _, data in messages:
+            sensor = self.production_plant.get_sensor(data['sensor_id'])
+            # Impact is calculated with the true role and the inferred role
+            if (data['sensor_id'] not in messages_impact.keys()):
+                messages_impact[data['sensor_id']] = 0
+            messages_impact[data['sensor_id']] += ROLE_IMPACT[sensor.get_true_role()] + ROLE_IMPACT[SensorRoleEnum(inferred_role)]
             
-            prob_to_take_an_action = 1.0 - load_term + msg_term # TODO: adjust
-            
-            if (not t):
-                print(load_term, msg_pressure, msg_term, prob_to_take_an_action)
-                t = True
-            
-            if rand_val < prob_to_take_an_action:
-                sensor = self.production_plant.get_sensor(sensor_id)
+        return messages_impact 
+           
+        
+    def update_sensors_states(self, all_messages: list[tuple[int, int, dict]]):
+        # The load term is a value between 0 and 1 
+        # thats indicates how much % of the sensors 
+        # with positive sum of impact by messages will be upkept
+        load_term = (min(1, self.THRESHOLD_LOAD / self.load)) # TODO: adjust
+
+        sensors_sum_impact = self.compute_messages_impact(all_messages)
+        sensors_sum_impact_ordered = sorted(sensors_sum_impact.items(), key=lambda item: item[1], reverse=True)
+        
+        sensors_to_analyze = sensors_sum_impact_ordered[:round(
+            len(sensors_sum_impact_ordered) * load_term)]
+        
+        if (Globals.time % 3600000 == 0):
+            print(f'{CYAN}Time: {Globals.time / 60000} minutes, Load term: {load_term}, number of sensors to analyze: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
+            print(
+                f'{CYAN}Sensors to analyze:\n{"\n".join([f"    Sensor {sensor_id} ({self.production_plant.get_sensor(sensor_id).get_true_role()}), impact: {sum_impact}" for sensor_id, sum_impact in sensors_to_analyze])}{RESET}')
+        
+        for sensor_id, _ in sensors_to_analyze:
+            sensor = self.production_plant.get_sensor(sensor_id)
+            if (sensor.local_state != SensorStateEnum.NORMAL):
                 sensor.upkeep()
+                self.sp = True
+                
+        if (self.sp):
+            print(
+                f'{CYAN}Time: {Globals.time / 60000} minutes, Load term: {load_term}, number of sensors analyzed: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
+            print(
+                f'{CYAN}Sensors analyzed:\n{"\n".join([f"    Sensor {sensor_id} ({self.production_plant.get_sensor(sensor_id).get_true_role()}), impact: {sum_impact}" for sensor_id, sum_impact in sensors_to_analyze])}{RESET}')
+            self.sp = False
+        
+        
 
     def step(self, messages: list[tuple[int, int, dict]]):
         self.load = len(messages)
         
-        self.update_sensors_transition_probabilities(messages)
+        self.update_sensors_states(messages)
         self.update_global_state()
         
