@@ -18,7 +18,7 @@ class ProductionPlant():
     def get_sensor(self, sensor_id):
         return self.sensors.get(sensor_id, None)
 
-    def add_sensor(self, sensor):
+    def add_sensor(self, sensor: Sensor):
         self.sensors[sensor.sensor_id] = sensor
         
     def set_state(self, state: PlantStateEnum):
