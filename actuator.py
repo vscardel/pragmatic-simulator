@@ -1,7 +1,8 @@
 from production_plant import PlantStateEnum, ProductionPlant
-from globals import Globals
+from simulator import sim
 from sensors import SensorRoleEnum, SensorStateEnum
 import random
+from utils.colors import *
 
 # Not used yet
 STATE_SEVERITY = {
@@ -25,13 +26,6 @@ ROLE_WEIGHT = {
     SensorRoleEnum.UNINPORTANT: 0.0,
 }
 
-RESET = "\033[0m"
-RED = "\033[31m"
-GREEN = "\033[32m"
-YELLOW = "\033[33m"
-BLUE = "\033[34m"
-MAGENTA = "\033[35m"
-CYAN = "\033[36m"
 
 class Actuator:
     THRESHOLD_LOAD = 50 # Used to calculate the overload that the actuator is under
@@ -138,8 +132,8 @@ class Actuator:
         sensors_to_analyze = sensors_sum_impact_ordered[:round(
             len(sensors_sum_impact_ordered) * load_term)]
         
-        if (Globals.time % 3600000 == 0):
-            print(f'{CYAN}Time: {Globals.time / 60000} minutes, Load term: {load_term}, number of sensors to analyze: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
+        if (sim.time % 3600000 == 0):
+            print(f'{CYAN}Time: {sim.time / 60000} minutes, Load term: {load_term}, number of sensors to analyze: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
             print(
                 f'{CYAN}Sensors to analyze:\n{"\n".join([f"    Sensor {sensor_id} ({self.production_plant.get_sensor(sensor_id).get_true_role()}), impact: {sum_impact}" for sensor_id, sum_impact in sensors_to_analyze])}{RESET}')
         
@@ -151,7 +145,7 @@ class Actuator:
                 
         if (self.sp):
             print(
-                f'{CYAN}Time: {Globals.time / 60000} minutes, Load term: {load_term}, number of sensors analyzed: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
+                f'{CYAN}Time: {sim.time / 60000} minutes, Load term: {load_term}, number of sensors analyzed: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
             print(
                 f'{CYAN}Sensors analyzed:\n{"\n".join([f"    Sensor {sensor_id} ({self.production_plant.get_sensor(sensor_id).get_true_role()}), impact: {sum_impact}" for sensor_id, sum_impact in sensors_to_analyze])}{RESET}')
             self.sp = False

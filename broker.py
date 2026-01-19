@@ -4,16 +4,9 @@ from typing import Any
 from sensors import SensorRoleEnum, Sensor
 from typing import List, Tuple
 import random
-from globals import Globals
+from simulator import sim
 from collections import Counter
-
-RESET = "\033[0m"
-RED = "\033[31m"
-GREEN = "\033[32m"
-YELLOW = "\033[33m"
-BLUE = "\033[34m"
-MAGENTA = "\033[35m"
-CYAN = "\033[36m"
+from utils.colors import *
 
 class Broker:
     def __init__(self) -> None:
@@ -80,7 +73,7 @@ class Broker:
             print(f"{BLUE}Sensor '{sensor_id}': {percentage:.4f}%{RESET}")
 
     def flush(self) -> List[Tuple[int, int, dict[str, Any]]]:
-        if (Globals.time % 3600000 == 0):
+        if (sim.time % 3600000 == 0):
             self.print_queue_stats()
         
         msgs = []
