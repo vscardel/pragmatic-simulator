@@ -47,6 +47,7 @@ class Sensor:
         self.standard_deviation = (operating_range['normal'][1] - operating_range['normal'][0]) / 2 # About 96% of the generated data will be inside the normal range
         self.local_state = SensorStateEnum.NORMAL
         self.sampling_interval = sampling_interval
+        self.last_thousand_values: list[float] = []
         self.__initialize_transition_probabilities()
 
     def __operating_range_is_ok(self):
@@ -171,9 +172,10 @@ class Sensor:
         
         for state, probability in possibly_states.items():
             if rand_value < probability + prob_sum and probability >= prob_sum:
-                old_state = self.local_state
+                self.old_state = self.local_state
                 self.local_state = state
                 self.auto_set_mean_value()
+                self.last_update_by_prob = (globals.time, self.old_state, self.local_state)
                 print(
                     f"{MAGENTA}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
                 globals.actuator.sp = True
@@ -183,6 +185,18 @@ class Sensor:
                 # print(f'CRITICAL->FAILURE: {self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.FAILURE]}')
                 # print(f'CRITICAL->DEGRADED: {self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.DEGRADED]}')
                 break
+    
+    def get_last_update_by_prob(self):
+        if ('last_update_by_prob' in self.__dict__):
+            return self.last_update_by_prob
+        else:
+            return None
+        
+    def get_old_state(self):
+        if ('old_state' in self.__dict__):
+            return self.old_state
+        else:
+            return None
 
     def upkeep(self):
         """
@@ -194,6 +208,7 @@ class Sensor:
 
         The method prints a message indicating the update of the sensor's state.
         """
+        self.old_state = self.local_state
         if (self.local_state == SensorStateEnum.DEGRADED):
             self.local_state = SensorStateEnum.NORMAL
             print(f"{GREEN}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id} ({self.get_true_role()}) upkept from DEGRADED to NORMAL{RESET}")
@@ -201,7 +216,15 @@ class Sensor:
             self.local_state = SensorStateEnum.DEGRADED
             print(
                 f"{GREEN}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id} ({self.get_true_role()}) upkept from from CRITICAL to DEGRADED{RESET}")
-
+        self.auto_set_mean_value()
+        self.last_upkeep = (globals.time, self.old_state, self.local_state)
+        
+    def get_last_upkeep(self):
+        if ('last_upkeep' in self.__dict__):
+            return self.last_upkeep
+        else:
+            return None
+        
     def get_true_role(self):
         return self.role
 
@@ -213,7 +236,23 @@ class Sensor:
         Returns a random value from a normal distribution with mean
         self.mean_value and standard deviation self.standard_deviation.
         """
-        return random.normalvariate(self.mean_value, self.standard_deviation)  # Normal distribution
+        self.last_value = random.normalvariate(
+            self.mean_value, self.standard_deviation)  # Normal distribution
+        self.last_thousand_values.append(self.last_value)
+        self.last_thousand_values = self.last_thousand_values[-1000:]
+        return self.last_value  
+
+    def get_last_value(self):
+        if ('last_value' in self.__dict__):
+            return self.last_value
+        else:
+            return None
+        
+    def get_last_thousand_values(self):
+        if ('last_thousand_values' in self.__dict__):
+            return self.last_thousand_values
+        else:
+            return None
 
     def send_data(self) -> dict[str, Any] | None:
         if (globals.time % self.sampling_interval != 0): 
@@ -225,8 +264,15 @@ class Sensor:
             'sensor_value': self.read_value(),
             'timestamp': globals.time
         }
+        self.last_message = message
         return message
 
+    def get_last_message(self):
+        if ('last_message' in self.__dict__):
+            return self.last_message
+        else:
+            return None
+    
     @classmethod
     def next_id(cls):
         cls.id += 1

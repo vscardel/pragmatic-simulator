@@ -17,6 +17,9 @@ class ProductionPlant():
         
     def get_sensor(self, sensor_id):
         return self.sensors.get(sensor_id, None)
+    
+    def get_sensors(self):
+        return dict([(sensor_id, sensor.__str__()) for sensor_id, sensor in self.sensors.items()])
 
     def add_sensor(self, sensor: Sensor):
         self.sensors[sensor.sensor_id] = sensor
