@@ -108,7 +108,14 @@ class Actuator:
                 messages_impact[data['sensor_id']] = 0
             messages_impact[data['sensor_id']] += ROLE_IMPACT[sensor.get_true_role()] + ROLE_IMPACT[SensorRoleEnum(inferred_role)]
             
+        self.last_messages_impact = messages_impact
         return messages_impact 
+    
+    def get_last_messages_impact(self):
+        if ('last_messages_impact' in self.__dict__):
+            return self.last_messages_impact
+        else:
+            return None
            
         
     def update_sensors_states(self, all_messages: list[tuple[int, int, dict]]):
@@ -132,6 +139,10 @@ class Actuator:
         sensors_to_analyze = sensors_sum_impact_ordered[:round(
             len(sensors_sum_impact_ordered) * load_term)]
         
+        self.load_term = load_term
+        self.sensors_sum_impact_ordered = sensors_sum_impact_ordered
+        self.sensors_to_analyze = sensors_to_analyze
+        
         if (globals.time % 3600000 == 0):
             print(f'{CYAN}Time: {globals.time / 60000} minutes, Load term: {load_term}, number of sensors to analyze: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
             print(
@@ -150,7 +161,23 @@ class Actuator:
                 f'{CYAN}Sensors analyzed:\n{"\n".join([f"    Sensor {sensor_id} ({self.production_plant.get_sensor(sensor_id).get_true_role()}), impact: {sum_impact}" for sensor_id, sum_impact in sensors_to_analyze])}{RESET}')
             self.sp = False
         
+    def get_last_load_term(self):
+        if ('load_term' in self.__dict__):
+            return self.load_term
+        else:
+            return None
         
+    def get_last_sensors_to_analyze(self):
+        if ('sensors_to_analyze' in self.__dict__):
+            return self.sensors_to_analyze
+        else:
+            return None
+        
+    def get_last_sensors_sum_impact_ordered(self):
+        if ('sensors_sum_impact_ordered' in self.__dict__):
+            return self.sensors_sum_impact_ordered
+        else:
+            return None
 
     def step(self, messages: list[tuple[int, int, dict]]):
         self.load = len(messages)
