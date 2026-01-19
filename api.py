@@ -1,19 +1,35 @@
 from fastapi import FastAPI
 from typing import Union
+from fastapi.middleware.cors import CORSMiddleware
 import globals
+from simulator import Simulator
+import threading
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
+sim = Simulator.get_instance()
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-
+@app.get("/all")
+def read_all():
+    return {
+        "time": globals.time,
+        "actuator": read_actuator(),
+        "broker": read_broker(),
+        "plant": read_plant(),
+        "sensors": read_sensors(),
+    }
 
 @app.get("/time")
 def read_time():
@@ -29,7 +45,8 @@ def read_actuator():
         "last_messages_impact": globals.actuator.get_last_messages_impact(),
         "last_load_term": globals.actuator.get_last_load_term(),
         "last_sensors_to_analyze": globals.actuator.get_last_sensors_to_analyze(),
-        "last_sensors_sum_impact_ordered": globals.actuator.get_last_sensors_sum_impact_ordered()
+        "last_sensors_sum_impact_ordered": globals.actuator.get_last_sensors_sum_impact_ordered(),
+        "last_pondered_state": globals.actuator.get_pondered_state(),
     }
 
 
@@ -73,3 +90,7 @@ def read_sensors():
         "last_message": sensor.get_last_message(),
         "old_state": sensor.get_old_state(),
     } for sensor in globals.plant.sensors.values()]
+
+@app.post("/start")
+def start():
+    threading.Thread(target=sim.run, daemon=True).start()

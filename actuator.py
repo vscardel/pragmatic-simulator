@@ -89,9 +89,16 @@ class Actuator:
             sumTop += ROLE_WEIGHT[sensor.get_true_role()] * sensor.local_state.value
             sumWeight += ROLE_WEIGHT[sensor.get_true_role()]
             
-        self.production_plant.set_state(round(sumTop / sumWeight))
+        self.pondered_state = sumTop / sumWeight
+        self.production_plant.set_state(round(self.pondered_state))
         self.global_state = (self.production_plant.state, self.load)
         
+    def get_pondered_state(self):
+        if ('pondered_state' in self.__dict__):
+            return self.pondered_state
+        else:
+            return None    
+    
     def compute_messages_impact(self, messages: list[tuple[int, int, dict]]) -> dict[int, float]:
         """
         Returns a dict with the keys as the 

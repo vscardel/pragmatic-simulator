@@ -177,7 +177,7 @@ class Sensor:
                 self.auto_set_mean_value()
                 self.last_update_by_prob = (globals.time, self.old_state, self.local_state)
                 print(
-                    f"{MAGENTA}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
+                    f"{MAGENTA}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {self.old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
                 globals.actuator.sp = True
                 # print(f'NORMAL->DEGRADED: {self.transition_probabilities[SensorStateEnum.NORMAL][SensorStateEnum.DEGRADED]}')
                 # print(f'DEGRADED->CRITICAL: {self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.CRITICAL]}')
@@ -239,7 +239,7 @@ class Sensor:
         self.last_value = random.normalvariate(
             self.mean_value, self.standard_deviation)  # Normal distribution
         self.last_thousand_values.append(self.last_value)
-        self.last_thousand_values = self.last_thousand_values[-1000:]
+        self.last_thousand_values = self.last_thousand_values[-2000:]
         return self.last_value  
 
     def get_last_value(self):

@@ -5,7 +5,7 @@ from sensors import Sensor, SensorTypeEnum, SensorRoleEnum
 import globals
 import random
 from utils.colors import *
-
+import time
 
 
 class Simulator:
@@ -38,18 +38,25 @@ class Simulator:
         
     def initialize_sensors(self, plant: 'ProductionPlant', broker: 'Broker') -> None:
         
+        
         for _ in range(self.NUMBER_OF_SENSORS):
+            normal_min = random.randint(50, 100)
+            normal_max = random.randint(normal_min+1, 120)
+            degraded = (random.randint(30, normal_min-1),
+                        random.randint(normal_max+1, 140))
+            critical = (random.randint(0, degraded[0]-1), 
+                        random.randint(degraded[1]+1, 170))
             sensor = Sensor(
                 sensor_id=Sensor.next_id(),
                 # We will use the same sensor type to infer pragmatics with the same semantics
                 sensor_type=SensorTypeEnum.TEMPERATURE,
                 role=random.choice(list(SensorRoleEnum)),
                 operating_range={  # TODO: Mocked and static values, change it
-                    "normal": (50, 60),
-                    "degraded": (40, 70),
-                    "critical": (30, 95)
+                    "normal": (normal_min, normal_max),
+                    "degraded": degraded,
+                    "critical": critical
                 },
-                mean_value=55,  # This value should be in the normal range
+                mean_value=random.uniform(normal_min, normal_max),  # This value should be in the normal range
                 # Sensors that send data in a interval between 1 ms and 5 seconds
                 sampling_interval=random.randint(1, 5000)
             )
@@ -83,10 +90,8 @@ class Simulator:
                     print(
                         f"Global State state: {globals.actuator.global_state[0]}, Global State load: {globals.actuator.global_state[1]}, Time: {globals.time / 60000} minutes\n")
 
-                    # It can be removed after debugging
-                    input("Press enter to continue...")
-
             self.advance_time(1)  # 1 ms
+            if (globals.time % 9999 == 0): time.sleep(0.0001)   
         
         
 

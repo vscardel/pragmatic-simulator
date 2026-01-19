@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation</title>
+    <link rel="stylesheet" href="styles/globals.css">
+</head>
+
+<body>
+    <div id="app">
+        <button id="start-button" onclick="startSimulation()">Start</button>
+        <button id="reset-button">Reset</button>
+        <button id="stop-button">Stop</button>
+
+        <div id="time"></div>
+
+        <h3>Sensors</h3>
+        <table id="sensors_table">
+            <thead id="sensors_table_head">
+                <tr>
+                    <th>Sensors</th>
+                    <th>Role</th>
+                    <th>State</th>
+                    <th>Old state</th>
+                    <th>Mean of last msgs</th>
+                    <th>Mean value</th>
+                    <th>Standard deviation</th>
+                    <th>Operating range</th>
+                    <th>Sampling interval</th>
+                    <th>Last value</th>
+                    <th>Graph</th>
+                </tr>
+            </thead>
+            <tbody id="sensors_table_body">
+
+            </tbody>
+        </table>
+    </div>
+
+    <script src="./dist/emitter.js"></script>
+    <script src="./dist/classes/actuator.js"></script>
+    <script src="./dist/classes/base.js"></script>
+    <script src="./dist/classes/broker.js"></script>
+    <script src="./dist/classes/globals.js"></script>
+    <script src="./dist/classes/production_plant.js"></script>
+    <script src="./dist/classes/sensors.js"></script>
+
+    <script src="./dist/fetcher.js"></script>
+    <script src="./dist/interface_updater.js"></script>
+    <script src="./dist/main.js"></script>
+</body>
+
+</html>
