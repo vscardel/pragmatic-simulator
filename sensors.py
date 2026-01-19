@@ -1,11 +1,10 @@
 import random
 from enum import Enum
 from typing import Literal
-from simulator import sim
-import time
 from utils.prob_utils import prob_hour_to_prob_min
 from typing import Any
 from utils.colors import *
+import globals
 
 class SensorStateEnum(Enum):
     NORMAL = 0
@@ -176,8 +175,8 @@ class Sensor:
                 self.local_state = state
                 self.auto_set_mean_value()
                 print(
-                    f"{MAGENTA}Time: {sim.time / 60000} minutes, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
-                sim.actuator.sp = True
+                    f"{MAGENTA}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
+                globals.actuator.sp = True
                 # print(f'NORMAL->DEGRADED: {self.transition_probabilities[SensorStateEnum.NORMAL][SensorStateEnum.DEGRADED]}')
                 # print(f'DEGRADED->CRITICAL: {self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.CRITICAL]}')
                 # print(f'DEGRADED->NORMAL: {self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.NORMAL]}')
@@ -197,11 +196,11 @@ class Sensor:
         """
         if (self.local_state == SensorStateEnum.DEGRADED):
             self.local_state = SensorStateEnum.NORMAL
-            print(f"{GREEN}Time: {sim.time / 60000} minutes, Sensor {self.sensor_id} ({self.get_true_role()}) upkept from DEGRADED to NORMAL{RESET}")
+            print(f"{GREEN}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id} ({self.get_true_role()}) upkept from DEGRADED to NORMAL{RESET}")
         elif (self.local_state == SensorStateEnum.CRITICAL):
             self.local_state = SensorStateEnum.DEGRADED
             print(
-                f"{GREEN}Time: {sim.time / 60000} minutes, Sensor {self.sensor_id} ({self.get_true_role()}) upkept from from CRITICAL to DEGRADED{RESET}")
+                f"{GREEN}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id} ({self.get_true_role()}) upkept from from CRITICAL to DEGRADED{RESET}")
 
     def get_true_role(self):
         return self.role
@@ -217,14 +216,14 @@ class Sensor:
         return random.normalvariate(self.mean_value, self.standard_deviation)  # Normal distribution
 
     def send_data(self) -> dict[str, Any] | None:
-        if (sim.time % self.sampling_interval != 0): 
+        if (globals.time % self.sampling_interval != 0): 
             return None
         
         message={
             'sensor_id': self.sensor_id,
             'sensor_type': self.sensor_type.value,
             'sensor_value': self.read_value(),
-            'timestamp': sim.time
+            'timestamp': globals.time
         }
         return message
 

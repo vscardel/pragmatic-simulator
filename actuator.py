@@ -1,8 +1,8 @@
 from production_plant import PlantStateEnum, ProductionPlant
-from simulator import sim
 from sensors import SensorRoleEnum, SensorStateEnum
 import random
 from utils.colors import *
+import globals
 
 # Not used yet
 STATE_SEVERITY = {
@@ -132,8 +132,8 @@ class Actuator:
         sensors_to_analyze = sensors_sum_impact_ordered[:round(
             len(sensors_sum_impact_ordered) * load_term)]
         
-        if (sim.time % 3600000 == 0):
-            print(f'{CYAN}Time: {sim.time / 60000} minutes, Load term: {load_term}, number of sensors to analyze: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
+        if (globals.time % 3600000 == 0):
+            print(f'{CYAN}Time: {globals.time / 60000} minutes, Load term: {load_term}, number of sensors to analyze: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
             print(
                 f'{CYAN}Sensors to analyze:\n{"\n".join([f"    Sensor {sensor_id} ({self.production_plant.get_sensor(sensor_id).get_true_role()}), impact: {sum_impact}" for sensor_id, sum_impact in sensors_to_analyze])}{RESET}')
         
@@ -145,7 +145,7 @@ class Actuator:
                 
         if (self.sp):
             print(
-                f'{CYAN}Time: {sim.time / 60000} minutes, Load term: {load_term}, number of sensors analyzed: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
+                f'{CYAN}Time: {globals.time / 60000} minutes, Load term: {load_term}, number of sensors analyzed: {len(sensors_to_analyze)} of {len(sensors_sum_impact)}{RESET}')
             print(
                 f'{CYAN}Sensors analyzed:\n{"\n".join([f"    Sensor {sensor_id} ({self.production_plant.get_sensor(sensor_id).get_true_role()}), impact: {sum_impact}" for sensor_id, sum_impact in sensors_to_analyze])}{RESET}')
             self.sp = False
