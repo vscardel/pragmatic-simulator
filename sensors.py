@@ -117,16 +117,24 @@ class Sensor:
     def auto_set_mean_value(self):
         # Calculate the size of the ranges
         normal_range = self.operating_range['normal'][1] - self.operating_range['normal'][0]
-        critical_range = self.operating_range['critical'][1] - self.operating_range['critical'][0]
         
         if self.local_state == SensorStateEnum.NORMAL:
             # Change mean value to a random value inside the normal range
             self.mean_value = random.uniform(self.operating_range['normal'][0], self.operating_range['normal'][1])
         elif self.local_state == SensorStateEnum.DEGRADED:
-            # Change mean value to a random value inside the degraded range but outside the normal range
-            self.mean_value = random.uniform(self.operating_range['degraded'][0], self.operating_range['degraded'][1] - normal_range)
-            if self.mean_value >= self.operating_range['normal'][0] and self.mean_value <= self.operating_range['normal'][1]:
-                self.mean_value += normal_range
+            if self.old_state == SensorStateEnum.NORMAL:
+                # Change mean value to a random value inside the degraded range but outside the normal range
+                self.mean_value = random.uniform(self.operating_range['degraded'][0], self.operating_range['degraded'][1] - normal_range)
+                if self.mean_value >= self.operating_range['normal'][0] and self.mean_value <= self.operating_range['normal'][1]:
+                    self.mean_value += normal_range
+            else:
+                critical_to_left = self.mean_value < self.operating_range['normal'][0]
+                if (critical_to_left):
+                    # Change mean value to the left of the normal range
+                    self.mean_value = random.uniform(self.operating_range['degraded'][0], self.operating_range['normal'][0])
+                else:
+                    # Change mean value to the right of the normal range
+                    self.mean_value = random.uniform(self.operating_range['normal'][1], self.operating_range['degraded'][1])
         elif self.local_state == SensorStateEnum.CRITICAL:
             # Verify if the mean value is more to the left or to the right of the degraded range
             degraded_to_left = self.mean_value < self.operating_range['normal'][0]
