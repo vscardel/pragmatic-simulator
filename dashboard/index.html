@@ -11,26 +11,46 @@
 <body>
     <div id="app">
         <button id="start-button" onclick="startSimulation()">Start</button>
+        <button id="start-button-ms" onclick="startSimulation(1)">Start 1 ms</button>
+        <button id="start-button-s" onclick="startSimulation(1000)">Start 1 s</button>
+        <button id="start-button-min" onclick="startSimulation(60000)">Start 1 min</button>
+        <button id="start-button-h" onclick="startSimulation(3600000)">Start 1 h</button>
         <button id="reset-button" onclick="resetSimulation()">Reset</button>
         <button id="stop-button" onclick="stopSimulation()">Stop</button>
 
         <div id="time"></div>
 
+        <h3>Actuator</h3>
+        <table id="actuator_table">
+            <thead class="table_head">
+                <tr>
+                    <th>Load</th>
+                    <th>THRESHOLD_LOAD</th>
+                    <th>last_load_term</th>
+                    <th>last_pondered_state</th>
+                </tr>
+            </thead>
+            <tbody id="actuator_table_body">
+                <tr id="actuator_table_body_row"></tr>
+            </tbody>
+        </table>
+
         <h3>Sensors</h3>
         <table id="sensors_table">
-            <thead id="sensors_table_head">
+            <thead class="table_head" id="sensors_table_head">
                 <tr>
                     <th>Sensors</th>
                     <th>Role</th>
                     <th>Old state</th>
                     <th>State</th>
                     <th>Mean of last msgs</th>
+                    <th>Last value</th>
                     <th>Mean value</th>
                     <th>Standard deviation</th>
                     <th>Operating range</th>
                     <th>Sampling interval</th>
-                    <th>Last value</th>
-                    <th>Graph</th>
+                    <th>Last messages impact</th>
+                    <th>Analyzed?</th>
                 </tr>
             </thead>
             <tbody id="sensors_table_body">

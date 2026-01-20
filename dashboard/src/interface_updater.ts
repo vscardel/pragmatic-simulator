@@ -60,9 +60,9 @@ type ActuatorData = {
   load: number;
   global_state: [number, SensorStateEnum];
   THRESHOLD_LOAD: number;
-  last_messages_impact: Record<number, number> | null;
+  last_messages_impact: Record<string, number> | null;
   last_load_term: number | null;
-  last_sensors_to_analize: [number, number][] | null;
+  last_sensors_to_analyze: [number, number][] | null;
   last_sensors_sum_impact_ordered: [number, number][] | null;
   last_pondered_state: number | null;
 };
@@ -99,27 +99,30 @@ type AllData = {
 
 const timeDiv = document.getElementById("time");
 const sensorsTableBody = document.getElementById("sensors_table_body");
+const actuatorTableBodyRow = document.getElementById("actuator_table_body_row");
 
 function updateInterface(data: AllData) {
   updateTime(data.time);
-  updateSensorsTable(data.sensors);
+  updateSensorsTable(data.sensors, data.actuator);
+  updateActuatorTable(data.actuator);
 }
 
 function updateTime(time: number) {
   timeDiv!.innerText = "Time: " + time.toString();
 }
 
-function updateSensorsTable(data: SensorData[]) {
+function updateSensorsTable(sensors: SensorData[], actuator: ActuatorData) {
   sensorsTableBody!.innerHTML = "";
 
-  for (const sensor of data) {
+  for (const sensor of sensors) {
     const row = document.createElement("tr");
     row.innerHTML = `
             <td>${sensor.sensor_id}</td>
-            <td>${sensor.role[0]}</td>
-            <td>${sensor.old_state === null ? "-" : SensorStateEnum[sensor.old_state]}</td>
-            <td>${SensorStateEnum[sensor.local_state]}</td>
-            <td>${(sensor.last_thousand_values.reduce((a, b) => a + b, 0) / sensor.last_thousand_values.length).toFixed(2) || "NO VALUES"}</td>
+            <td style="background-color: ${sensor.role[1] === SensorRoleEnum.CRITICAL ? "#ff00005a" : sensor.role[1] === SensorRoleEnum.NORMAL ? "#5d5dff5a" : "#a9a9a95a"}">${sensor.role[0]}</td>
+            <td style="background-color: ${sensor.old_state === null ? "transparent" : sensor.old_state === SensorStateEnum.NORMAL ? "#00b30037" : sensor.old_state === SensorStateEnum.DEGRADED ? "#fff00037" : sensor.old_state === SensorStateEnum.CRITICAL ? "#ff000037" : "#00000037"}">${sensor.old_state === null ? "-" : SensorStateEnum[sensor.old_state]}</td>
+            <td style="background-color: ${sensor.local_state === null ? "transparent" : sensor.local_state === SensorStateEnum.NORMAL ? "#00b3005a" : sensor.local_state === SensorStateEnum.DEGRADED ? "#fff0005a" : sensor.local_state === SensorStateEnum.CRITICAL ? "#ff00005a" : "#0000005a"}">${SensorStateEnum[sensor.local_state]}</td>
+            <td>${(sensor.last_thousand_values.reduce((a, b) => a + b, 0) / sensor.last_thousand_values.length).toFixed(2)}</td>
+            <td>${sensor.last_value}</td>
             <td>${sensor.mean_value.toFixed(2)}</td>
             <td>${sensor.standard_deviation.toFixed(2)}</td>
             <td>${
@@ -135,8 +138,8 @@ function updateSensorsTable(data: SensorData[]) {
               }).outerHTML
             }</td>
             <td>${sensor.sampling_interval}</td>
-            <td>${sensor.last_value}</td>
-            
+            <td>${actuator.last_messages_impact?.[sensor.sensor_id.toString()].toFixed(4)}</td>
+            <td style="background-color: ${actuator.last_sensors_to_analyze?.find((s) => s[0] === sensor.sensor_id) ? "#00ff005a" : "#ff00005a"}">${actuator.last_sensors_to_analyze?.find((s) => s[0] === sensor.sensor_id) ? "Yes" : "No"}</td>
         `;
     sensorsTableBody!.appendChild(row);
   }
@@ -153,7 +156,7 @@ function buildOperatingRangeGraph(or: OperatingRange, mean: number, state: Senso
   const criticalRange = or.critical[1] - or.critical[0];
   const criticalDiv = document.createElement("div");
   criticalDiv.style.width = `100%`;
-  criticalDiv.style.backgroundColor = "red";
+  criticalDiv.style.backgroundColor = "#ff0000";
   criticalDiv.style.height = "100%";
   if (state === SensorStateEnum.CRITICAL) {
     criticalDiv.style.border = "3px solid blue";
@@ -189,7 +192,7 @@ function buildOperatingRangeGraph(or: OperatingRange, mean: number, state: Senso
   const normalRange = or.normal[1] - or.normal[0];
   const normalDiv = document.createElement("div");
   normalDiv.style.width = `${(normalRange / degradedRange) * 100}%`;
-  normalDiv.style.backgroundColor = "#00b300ff";
+  normalDiv.style.backgroundColor = "#00b300";
   normalDiv.style.marginLeft = `${((or.normal[0] - or.degraded[0]) / degradedRange) * 100}%`;
   normalDiv.style.position = "absolute";
   normalDiv.style.top = "0";
@@ -278,5 +281,81 @@ function createSensorBarChart({
     container.appendChild(bar);
   }
 
+  return container;
+}
+
+function updateActuatorTable(data: ActuatorData) {
+  actuatorTableBodyRow!.innerHTML = `
+    <td>${data.load}</td>
+    <td>${data.THRESHOLD_LOAD}</td>
+    <td><div>${data.last_load_term?.toFixed(4)}</div>${buildLoadTermBar(data.last_sensors_sum_impact_ordered ?? [], data.last_load_term ?? 0).outerHTML}</td>
+    <td><div>${data.last_pondered_state?.toFixed(4)} (${SensorStateEnum[data.global_state[0]]})</div>${buildPonderedStateBar(data.last_pondered_state ?? 0).outerHTML}</td>
+  `;
+}
+
+function buildLoadTermBar(last_sensors_sum_impact_ordered: [number, number][], loadTerm: number) {
+  const container = document.createElement("div");
+  container.style.display = "grid";
+  container.style.border = "1px solid black";
+  container.style.position = "relative";
+  container.style.height = "30px";
+  container.style.gridTemplateColumns = `repeat(${last_sensors_sum_impact_ordered.length}, 1fr)`;
+
+  for (const [sensor_id] of last_sensors_sum_impact_ordered) {
+    const block = document.createElement("div");
+    block.style.height = "100%";
+    block.style.display = "flex";
+    if (sensor_id !== last_sensors_sum_impact_ordered[last_sensors_sum_impact_ordered.length - 1][0])
+      block.style.borderRight = "1px solid black";
+    block.style.justifyContent = "center";
+    block.style.alignItems = "center";
+    block.innerText = sensor_id.toString();
+    container.appendChild(block);
+  }
+
+  const loadTermBar = document.createElement("div");
+  loadTermBar.style.position = "absolute";
+  loadTermBar.style.height = "100%";
+  loadTermBar.style.backgroundColor = "blue";
+  loadTermBar.style.width = `2px`;
+  loadTermBar.style.left = `${loadTerm * 100}%`;
+  container.appendChild(loadTermBar);
+  return container;
+}
+
+function buildPonderedStateBar(ponderedState: number) {
+  const container = document.createElement("div");
+  container.style.display = "grid";
+  container.style.position = "relative";
+  container.style.height = "30px";
+  container.style.gridTemplateColumns = `repeat(4, 1fr)`;
+
+  const normalBlock = document.createElement("div");
+  normalBlock.style.height = "100%";
+  normalBlock.style.backgroundColor = "#00b300";
+  container.appendChild(normalBlock);
+
+  const degradedBlock = document.createElement("div");
+  degradedBlock.style.height = "100%";
+  degradedBlock.style.backgroundColor = "#fff000";
+  container.appendChild(degradedBlock);
+
+  const criticalBlock = document.createElement("div");
+  criticalBlock.style.height = "100%";
+  criticalBlock.style.backgroundColor = "#ff0000";
+  container.appendChild(criticalBlock);
+
+  const failureBlock = document.createElement("div");
+  failureBlock.style.height = "100%";
+  failureBlock.style.backgroundColor = "#000000";
+  container.appendChild(failureBlock);
+
+  const stateBar = document.createElement("div");
+  stateBar.style.position = "absolute";
+  stateBar.style.height = "100%";
+  stateBar.style.backgroundColor = "blue";
+  stateBar.style.width = `2px`;
+  stateBar.style.left = `${(ponderedState / 3) * 100}%`;
+  container.appendChild(stateBar);
   return container;
 }

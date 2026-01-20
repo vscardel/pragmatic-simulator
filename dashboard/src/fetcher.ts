@@ -27,8 +27,8 @@ function stopFetching() {
   }
 }
 
-function startSimulation() {
-  fetch("http://localhost:8000/start", {method: "POST"});
+function startSimulation(steps?: number) {
+  fetch("http://localhost:8000/start" + (steps ? `?steps=${steps}` : ""), {method: "POST"});
 }
 
 function stopSimulation() {
