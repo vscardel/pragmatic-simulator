@@ -141,12 +141,12 @@ class Sensor:
             critical_to_left = self.mean_value < self.operating_range['normal'][0]
             if (critical_to_left):
                 # Change mean value to the left of the critical range using a mirrored to left normal distribution with the mean value on the border of the critical range
-                self.mean_value = random.normalvariate(self.operating_range['critical'][0], critical_range)
+                self.mean_value = random.normalvariate(self.operating_range['critical'][0], self.standard_deviation)
                 if self.mean_value >= self.operating_range['critical'][0]:
                     self.mean_value = self.operating_range['critical'][0] + (self.operating_range['critical'][0] - self.mean_value)
             else:
                 # Change mean value to the right of the critical range using a mirrored to right normal distribution with the mean value on the border of the critical range
-                self.mean_value = random.normalvariate(self.operating_range['critical'][1], critical_range)
+                self.mean_value = random.normalvariate(self.operating_range['critical'][1], self.standard_deviation)
                 if self.mean_value <= self.operating_range['critical'][1]:
                     self.mean_value = self.operating_range['critical'][1] - (self.mean_value - self.operating_range['critical'][1])
                 
