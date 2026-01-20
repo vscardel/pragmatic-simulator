@@ -18,6 +18,7 @@ class Simulator:
 
     
     def __init__(self):
+        self.should_stop = False
         self.reset()
     
     @classmethod
@@ -26,11 +27,18 @@ class Simulator:
             cls.instance = Simulator()
         return cls.instance
     
+    def next_sensor_id(self) -> int:
+        globals.last_sensor_id += 1
+        return globals.last_sensor_id
+    
     def reset(self) -> None:
+        self.should_stop = False
         globals.time = 0
         globals.plant = ProductionPlant()
         globals.actuator = Actuator(globals.plant)
         globals.broker = Broker()
+        globals.last_sensor_id = 0
+        globals.is_running = False
         self.initialize_sensors(globals.plant, globals.broker)
         
     def advance_time(self, steps: int = 1) -> None:
@@ -47,7 +55,7 @@ class Simulator:
             critical = (random.randint(0, degraded[0]-1), 
                         random.randint(degraded[1]+1, 170))
             sensor = Sensor(
-                sensor_id=Sensor.next_id(),
+                sensor_id=self.next_sensor_id(),
                 # We will use the same sensor type to infer pragmatics with the same semantics
                 sensor_type=SensorTypeEnum.TEMPERATURE,
                 role=random.choice(list(SensorRoleEnum)),
@@ -64,8 +72,17 @@ class Simulator:
             plant.add_sensor(sensor)
             broker.subscribe(sensor)
             
+    def stop(self) -> None:
+        if globals.is_running:
+            self.should_stop = True
+            
     def run(self) -> None:
+        globals.is_running = True
         for _ in range(self.TIME_STEPS):  # Time steps
+            if self.should_stop: 
+                globals.is_running = False
+                self.should_stop = False
+                break
             for id, sensor in globals.plant.sensors.items():
                 if (globals.time % 60000 == 0):
                     # Update the state of the sensor only every minute
@@ -91,7 +108,7 @@ class Simulator:
                         f"Global State state: {globals.actuator.global_state[0]}, Global State load: {globals.actuator.global_state[1]}, Time: {globals.time / 60000} minutes\n")
 
             self.advance_time(1)  # 1 ms
-            if (globals.time % 9999 == 0): time.sleep(0.0001)   
+            if (globals.time % 59999 == 0): time.sleep(0.00001)   # It enable api thread to respond
         
         
 

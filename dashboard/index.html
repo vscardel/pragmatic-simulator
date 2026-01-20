@@ -11,8 +11,8 @@
 <body>
     <div id="app">
         <button id="start-button" onclick="startSimulation()">Start</button>
-        <button id="reset-button">Reset</button>
-        <button id="stop-button">Stop</button>
+        <button id="reset-button" onclick="resetSimulation()">Reset</button>
+        <button id="stop-button" onclick="stopSimulation()">Stop</button>
 
         <div id="time"></div>
 
@@ -22,8 +22,8 @@
                 <tr>
                     <th>Sensors</th>
                     <th>Role</th>
-                    <th>State</th>
                     <th>Old state</th>
+                    <th>State</th>
                     <th>Mean of last msgs</th>
                     <th>Mean value</th>
                     <th>Standard deviation</th>

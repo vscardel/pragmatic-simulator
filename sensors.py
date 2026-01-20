@@ -273,7 +273,4 @@ class Sensor:
         else:
             return None
     
-    @classmethod
-    def next_id(cls):
-        cls.id += 1
-        return cls.id
+    

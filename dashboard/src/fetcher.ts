@@ -30,3 +30,11 @@ function stopFetching() {
 function startSimulation() {
   fetch("http://localhost:8000/start", {method: "POST"});
 }
+
+function stopSimulation() {
+  fetch("http://localhost:8000/stop", {method: "POST"});
+}
+
+function resetSimulation() {
+  fetch("http://localhost:8000/reset", {method: "POST"});
+}

@@ -94,3 +94,14 @@ def read_sensors():
 @app.post("/start")
 def start():
     threading.Thread(target=sim.run, daemon=True).start()
+
+
+@app.post("/reset")
+def reset():
+    sim.stop()
+    sim.reset()
+    
+
+@app.post("/stop")
+def stop():
+    sim.stop()

@@ -117,16 +117,17 @@ function updateSensorsTable(data: SensorData[]) {
     row.innerHTML = `
             <td>${sensor.sensor_id}</td>
             <td>${sensor.role[0]}</td>
-            <td>${SensorStateEnum[sensor.local_state]}</td>
             <td>${sensor.old_state === null ? "-" : SensorStateEnum[sensor.old_state]}</td>
-            <td>${sensor.last_thousand_values.reduce((a, b) => a + b, 0) / sensor.last_thousand_values.length}</td>
-            <td>${sensor.mean_value}</td>
-            <td>${sensor.standard_deviation}</td>
+            <td>${SensorStateEnum[sensor.local_state]}</td>
+            <td>${(sensor.last_thousand_values.reduce((a, b) => a + b, 0) / sensor.last_thousand_values.length).toFixed(2) || "NO VALUES"}</td>
+            <td>${sensor.mean_value.toFixed(2)}</td>
+            <td>${sensor.standard_deviation.toFixed(2)}</td>
             <td>${
-              buildOperatingRangeGraph(sensor.operating_range).outerHTML +
+              buildOperatingRangeGraph(sensor.operating_range, sensor.mean_value, sensor.local_state)
+                .outerHTML +
               createSensorBarChart({
                 values: sensor.last_thousand_values,
-                barsCount: 50,
+                barsCount: 60,
                 minValue: sensor.operating_range.critical[0],
                 maxValue: sensor.operating_range.critical[1],
                 width: 300,
@@ -141,59 +142,81 @@ function updateSensorsTable(data: SensorData[]) {
   }
 }
 
-function buildOperatingRangeGraph(or: OperatingRange) {
+function buildOperatingRangeGraph(or: OperatingRange, mean: number, state: SensorStateEnum) {
   const container = document.createElement("div");
   container.style.width = "100%";
   container.style.minWidth = "300px";
-  container.style.height = "50px";
+  container.style.height = "30px";
+  container.style.fontWeight = "bold";
+  container.style.position = "relative";
 
   const criticalRange = or.critical[1] - or.critical[0];
   const criticalDiv = document.createElement("div");
   criticalDiv.style.width = `100%`;
   criticalDiv.style.backgroundColor = "red";
-  criticalDiv.style.position = "relative";
   criticalDiv.style.height = "100%";
+  if (state === SensorStateEnum.CRITICAL) {
+    criticalDiv.style.border = "3px solid blue";
+    criticalDiv.style.top = "-3px";
+  }
 
   const criticalDivText = document.createElement("span");
   criticalDivText.style.width = `100%`;
   criticalDivText.style.display = "flex";
   criticalDivText.style.justifyContent = "space-between";
-  criticalDivText.innerHTML = `<span>${or.critical[0]}</span><span>${or.critical[1]}</span>`;
+  criticalDivText.innerHTML = `<span style="transform: translateX(-100%);">${or.critical[0]}</span><span style="transform: translateX(100%);">${or.critical[1]}</span>`;
   criticalDiv.appendChild(criticalDivText);
 
   const degradedRange = or.degraded[1] - or.degraded[0];
   const degradedDiv = document.createElement("div");
   degradedDiv.style.width = `${(degradedRange / criticalRange) * 100}%`;
-  degradedDiv.style.backgroundColor = "yellow";
+  degradedDiv.style.backgroundColor = "#fff000";
   degradedDiv.style.marginLeft = `${((or.degraded[0] - or.critical[0]) / criticalRange) * 100}%`;
   degradedDiv.style.position = "absolute";
   degradedDiv.style.top = "0";
   degradedDiv.style.height = "100%";
+  if (state === SensorStateEnum.DEGRADED) {
+    degradedDiv.style.border = "3px solid blue";
+    degradedDiv.style.top = "-3px";
+  }
   const degradedDivText = document.createElement("span");
   degradedDivText.style.width = `100%`;
   degradedDivText.style.display = "flex";
   degradedDivText.style.justifyContent = "space-between";
-  degradedDivText.innerHTML = `<span>${or.degraded[0]}</span><span>${or.degraded[1]}</span>`;
+  degradedDivText.innerHTML = `<span style="transform: translateX(-70%);">${or.degraded[0]}</span><span style="transform: translateX(70%);">${or.degraded[1]}</span>`;
   degradedDiv.appendChild(degradedDivText);
 
   const normalRange = or.normal[1] - or.normal[0];
   const normalDiv = document.createElement("div");
   normalDiv.style.width = `${(normalRange / degradedRange) * 100}%`;
-  normalDiv.style.backgroundColor = "green";
+  normalDiv.style.backgroundColor = "#00b300ff";
   normalDiv.style.marginLeft = `${((or.normal[0] - or.degraded[0]) / degradedRange) * 100}%`;
   normalDiv.style.position = "absolute";
   normalDiv.style.top = "0";
   normalDiv.style.height = "100%";
+  if (state === SensorStateEnum.NORMAL) {
+    normalDiv.style.border = "3px solid blue";
+    normalDiv.style.top = "-3px";
+  }
   const normalDivText = document.createElement("span");
   normalDivText.style.width = `100%`;
   normalDivText.style.display = "flex";
   normalDivText.style.justifyContent = "space-between";
-  normalDivText.innerHTML = `<span>${or.normal[0]}</span><span>${or.normal[1]}</span>`;
+  normalDivText.innerHTML = `<span style="transform: translateX(-50%);">${or.normal[0]}</span><span style="transform: translateX(50%);">${or.normal[1]}</span>`;
   normalDiv.appendChild(normalDivText);
 
   degradedDiv.appendChild(normalDiv);
   criticalDiv.appendChild(degradedDiv);
+
+  const meanBar = document.createElement("div");
+  meanBar.style.position = "absolute";
+  meanBar.style.height = "100%";
+  meanBar.style.backgroundColor = "blue";
+  meanBar.style.width = `2px`;
+  meanBar.style.top = "0";
+  meanBar.style.left = `${((mean - or.critical[0]) / criticalRange) * 100}%`;
   container.appendChild(criticalDiv);
+  container.appendChild(meanBar);
 
   return container;
 }
@@ -220,7 +243,7 @@ function createSensorBarChart({
   container.style.alignItems = "flex-end";
   container.style.width = `${width}px`;
   container.style.height = `${height}px`;
-  container.style.gap = "2px";
+  container.style.gap = "1px";
   container.style.boxSizing = "border-box";
 
   if (!values || values.length === 0) return container;
