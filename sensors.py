@@ -26,9 +26,7 @@ class SensorTypeEnum(Enum):
     AIR_QUALITY = 5
 
 
-class Sensor:
-    id = 0
-    
+class Sensor:    
     def __init__(self,
                  sensor_id: int,
                  sensor_type: SensorTypeEnum,
@@ -247,7 +245,7 @@ class Sensor:
         self.last_value = random.normalvariate(
             self.mean_value, self.standard_deviation)  # Normal distribution
         self.last_thousand_values.append(self.last_value)
-        self.last_thousand_values = self.last_thousand_values[-2000:]
+        self.last_thousand_values = self.last_thousand_values[-2000:] 
         return self.last_value  
 
     def get_last_value(self):
