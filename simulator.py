@@ -13,9 +13,6 @@ class Simulator:
     
     # -------------- SIMULATION PARAMETERS --------------
     NUMBER_OF_SENSORS = 5
-    # We can model it to be milliseconds
-    TIME_STEPS = 24 * 60 * 60 * 1000  # 24 hours
-
     
     def __init__(self):
         self.should_stop = False
@@ -76,9 +73,9 @@ class Simulator:
         if globals.is_running:
             self.should_stop = True
             
-    def run(self) -> None:
+    def run(self, steps: int = globals.DEFAULT_TIME_STEPS) -> None:
         globals.is_running = True
-        for _ in range(self.TIME_STEPS):  # Time steps
+        for _ in range(steps):  # Time steps
             if self.should_stop: 
                 globals.is_running = False
                 self.should_stop = False

@@ -92,8 +92,8 @@ def read_sensors():
     } for sensor in globals.plant.sensors.values()]
 
 @app.post("/start")
-def start():
-    threading.Thread(target=sim.run, daemon=True).start()
+def start(steps: int = globals.DEFAULT_TIME_STEPS):
+    threading.Thread(target=sim.run,args=(steps,), daemon=True).start()
 
 
 @app.post("/reset")

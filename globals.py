@@ -11,3 +11,4 @@ broker: 'Broker'
 actuator: 'Actuator'
 last_sensor_id = 0
 is_running = False
+DEFAULT_TIME_STEPS = 24 * 60 * 60 * 1000  # 24 hours
