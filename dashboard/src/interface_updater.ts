@@ -108,7 +108,7 @@ function updateInterface(data: AllData) {
 }
 
 function updateTime(time: number) {
-  timeDiv!.innerText = "Time: " + time.toString();
+  timeDiv!.innerText = "Time: " + time.toString() + ` (${formatMilliseconds(time)})`;
 }
 
 function updateSensorsTable(sensors: SensorData[], actuator: ActuatorData) {
@@ -122,7 +122,7 @@ function updateSensorsTable(sensors: SensorData[], actuator: ActuatorData) {
             <td style="background-color: ${sensor.old_state === null ? "transparent" : sensor.old_state === SensorStateEnum.NORMAL ? "#00b30037" : sensor.old_state === SensorStateEnum.DEGRADED ? "#fff00037" : sensor.old_state === SensorStateEnum.CRITICAL ? "#ff000037" : "#00000037"}">${sensor.old_state === null ? "-" : SensorStateEnum[sensor.old_state]}</td>
             <td style="background-color: ${sensor.local_state === null ? "transparent" : sensor.local_state === SensorStateEnum.NORMAL ? "#00b3005a" : sensor.local_state === SensorStateEnum.DEGRADED ? "#fff0005a" : sensor.local_state === SensorStateEnum.CRITICAL ? "#ff00005a" : "#0000005a"}">${SensorStateEnum[sensor.local_state]}</td>
             <td>${(sensor.last_thousand_values.reduce((a, b) => a + b, 0) / sensor.last_thousand_values.length).toFixed(2)}</td>
-            <td>${sensor.last_value}</td>
+            <td>${sensor.last_value?.toFixed(4)}</td>
             <td>${sensor.mean_value.toFixed(2)}</td>
             <td>${sensor.standard_deviation.toFixed(2)}</td>
             <td>${
@@ -286,9 +286,9 @@ function createSensorBarChart({
 
 function updateActuatorTable(data: ActuatorData) {
   actuatorTableBodyRow!.innerHTML = `
-    <td>${data.load}</td>
+    <td>${data.load} (${((data.load / data.THRESHOLD_LOAD) * 100).toFixed(2)}%)</td>
     <td>${data.THRESHOLD_LOAD}</td>
-    <td><div>${data.last_load_term?.toFixed(4)}</div>${buildLoadTermBar(data.last_sensors_sum_impact_ordered ?? [], data.last_load_term ?? 0).outerHTML}</td>
+    <td><div>${data.last_load_term?.toFixed(5)} (${((data.last_load_term ?? NaN) * 100).toFixed(2)}%)</div>${buildLoadTermBar(data.last_sensors_sum_impact_ordered ?? [], data.last_load_term ?? 0).outerHTML}</td>
     <td><div>${data.last_pondered_state?.toFixed(4)} (${SensorStateEnum[data.global_state[0]]})</div>${buildPonderedStateBar(data.last_pondered_state ?? 0).outerHTML}</td>
   `;
 }
@@ -358,4 +358,43 @@ function buildPonderedStateBar(ponderedState: number) {
   stateBar.style.left = `${(ponderedState / 3) * 100}%`;
   container.appendChild(stateBar);
   return container;
+}
+
+type TimeParts = {
+  years: number;
+  months: number;
+  weeks: number;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  milliseconds: number;
+};
+
+function formatMilliseconds(ms: number): string {
+  if (ms < 0) throw new Error("O valor não pode ser negativo");
+
+  const units = [
+    {label: "year", ms: 365 * 24 * 60 * 60 * 1000},
+    {label: "minute", ms: 30 * 24 * 60 * 60 * 1000},
+    {label: "week", ms: 7 * 24 * 60 * 60 * 1000},
+    {label: "day", ms: 24 * 60 * 60 * 1000},
+    {label: "hour", ms: 60 * 60 * 1000},
+    {label: "minute", ms: 60 * 1000},
+    {label: "second", ms: 1000},
+    {label: "ms", ms: 1},
+  ];
+
+  let remaining = ms;
+  const parts: string[] = [];
+
+  for (const unit of units) {
+    const value = Math.floor(remaining / unit.ms);
+    if (value > 0) {
+      parts.push(`${value} ${unit.label}${value > 1 && unit.label !== "ms" ? "s" : ""}`);
+      remaining -= value * unit.ms;
+    }
+  }
+
+  return parts.length ? parts.join(", ") : "0 ms";
 }
