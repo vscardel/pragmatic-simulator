@@ -44,7 +44,7 @@ class Sensor:
         if (not self.__operating_range_is_ok()):
             raise Exception("Operating range is not valid")
         self.mean_value = mean_value
-        self.standard_deviation = (operating_range['normal'][1] - operating_range['normal'][0]) / 2 # About 96% of the generated data will be inside the normal range
+        self.standard_deviation = (operating_range['normal'][1] - operating_range['normal'][0]) / 4 # About 96% of the generated data will be inside the normal range
         self.local_state = SensorStateEnum.NORMAL
         self.sampling_interval = sampling_interval
         self.last_thousand_values: list[float] = []
