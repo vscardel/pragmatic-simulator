@@ -3,6 +3,7 @@ from sensors import SensorRoleEnum, SensorStateEnum
 import random
 from utils.colors import *
 import globals
+import math
 
 # Not used yet
 STATE_SEVERITY = {
@@ -90,7 +91,8 @@ class Actuator:
             sumWeight += ROLE_WEIGHT[sensor.get_true_role()]
             
         self.pondered_state = sumTop / sumWeight
-        self.production_plant.set_state(round(self.pondered_state))
+        aux = self.pondered_state / 0.75
+        self.production_plant.set_state(math.floor(aux))
         self.global_state = (self.production_plant.state, self.load)
         
     def get_pondered_state(self):
