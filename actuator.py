@@ -30,6 +30,8 @@ ROLE_WEIGHT = {
 
 class Actuator:
     THRESHOLD_LOAD = 50 # Used to calculate the overload that the actuator is under
+    TRUE_ROLE_IMPACT_WEIGHT = 1
+    INFERRED_ROLE_IMPACT_WEIGHT = 1
     
     def __init__(self, production_plant: ProductionPlant):
         self.load = 0
@@ -115,7 +117,7 @@ class Actuator:
             # Impact is calculated with the true role and the inferred role
             if (data['sensor_id'] not in messages_impact.keys()):
                 messages_impact[data['sensor_id']] = 0
-            messages_impact[data['sensor_id']] += ROLE_IMPACT[sensor.get_true_role()] + ROLE_IMPACT[SensorRoleEnum(inferred_role)]
+            messages_impact[data['sensor_id']] += ROLE_IMPACT[sensor.get_true_role()] * self.TRUE_ROLE_IMPACT_WEIGHT + ROLE_IMPACT[SensorRoleEnum(inferred_role)] * self.INFERRED_ROLE_IMPACT_WEIGHT
             
         self.last_messages_impact = messages_impact
         return messages_impact 
