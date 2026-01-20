@@ -42,8 +42,6 @@ class Simulator:
         globals.time += steps
         
     def initialize_sensors(self, plant: 'ProductionPlant', broker: 'Broker') -> None:
-        
-        
         for _ in range(self.NUMBER_OF_SENSORS):
             normal_min = random.randint(50, 100)
             normal_max = random.randint(normal_min+1, 120)
@@ -74,6 +72,8 @@ class Simulator:
             self.should_stop = True
             
     def run(self, steps: int = globals.DEFAULT_TIME_STEPS) -> None:
+        if globals.is_running:
+            return
         globals.is_running = True
         for _ in range(steps):  # Time steps
             if self.should_stop: 
@@ -106,6 +106,8 @@ class Simulator:
 
             self.advance_time(1)  # 1 ms
             if (globals.time % 59999 == 0): time.sleep(0.00001)   # It enable api thread to respond
+
+        globals.is_running = False
         
         
 
