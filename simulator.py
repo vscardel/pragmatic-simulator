@@ -6,7 +6,7 @@ import globals
 import random
 from utils.colors import *
 import time
-
+from utils.timers import remove_timer
 
 class Simulator:
     instance: 'Simulator' = None
@@ -67,6 +67,14 @@ class Simulator:
             plant.add_sensor(sensor)
             broker.subscribe(sensor)
             
+    def handle_timers(self):
+        for time, func in sorted(globals.timers):
+            if globals.time >= time:
+                func()
+                remove_timer(time, func)
+            else:
+                break
+            
     def stop(self) -> None:
         if globals.is_running:
             self.should_stop = True
@@ -80,6 +88,8 @@ class Simulator:
                 globals.is_running = False
                 self.should_stop = False
                 break
+            self.handle_timers()
+            
             for id, sensor in globals.plant.sensors.items():
                 if (globals.time % 60000 == 0):
                     # Update the state of the sensor only every minute

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from actuator import Actuator
@@ -12,3 +12,4 @@ actuator: 'Actuator'
 last_sensor_id = 0
 is_running = False
 DEFAULT_TIME_STEPS = 24 * 60 * 60 * 1000  # 24 hours
+timers: list[tuple[int, Callable]] = []
