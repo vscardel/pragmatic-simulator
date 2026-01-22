@@ -15,7 +15,6 @@ class Simulator:
     NUMBER_OF_SENSORS = 5
     
     def __init__(self):
-        self.should_stop = False
         self.reset()
     
     @classmethod
@@ -29,7 +28,7 @@ class Simulator:
         return globals.last_sensor_id
     
     def reset(self) -> None:
-        self.should_stop = False
+        globals.should_stop = False
         globals.time = 0
         globals.plant = ProductionPlant()
         globals.actuator = Actuator(globals.plant)
@@ -77,20 +76,20 @@ class Simulator:
             
     def stop(self) -> None:
         if globals.is_running:
-            self.should_stop = True
+            globals.should_stop = True
             
     def run(self, steps: int = globals.DEFAULT_TIME_STEPS) -> None:
         if globals.is_running:
             return
         globals.is_running = True
         for _ in range(steps):  # Time steps
-            if self.should_stop: 
+            if globals.should_stop: 
                 globals.is_running = False
-                self.should_stop = False
+                globals.should_stop = False
                 break
             self.handle_timers()
             
-            for id, sensor in globals.plant.sensors.items():
+            for sensor_id, sensor in globals.plant.sensors.items():
                 if (globals.time % 60000 == 0):
                     # Update the state of the sensor only every minute
                     # It turn the simulation faster
@@ -103,7 +102,7 @@ class Simulator:
                 if current_sensor_message is None:
                     continue
 
-                globals.broker.publish(sensor.sensor_id, current_sensor_message)
+                globals.broker.publish(sensor_id, current_sensor_message)
 
             if (globals.time % 60000 == 0):  # Simulation actuator action only for each minute
                 messages = globals.broker.flush()  # Broker has all messages collected by sensors in the last minute (the algorithm should be able to choose the messages to be saved in the queue)
@@ -115,7 +114,8 @@ class Simulator:
                         f"Global State state: {globals.actuator.global_state[0]}, Global State load: {globals.actuator.global_state[1]}, Time: {globals.time / 60000} minutes\n")
 
             self.advance_time(1)  # 1 ms
-            if (globals.time % 59999 == 0): time.sleep(0.00001)   # It enable api thread to respond
+            if (globals.time % 59999 == 0):
+                time.sleep(0.00001)   # It enable api thread to respond
 
         globals.is_running = False
         
