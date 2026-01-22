@@ -1,19 +1,23 @@
 
 from enum import Enum
-from sensors import Sensor
+from typing import TYPE_CHECKING
 
-class PlantStateEnum(Enum):
-    NORMAL = 'NORMAL'
-    DEGRADED = 'DEGRADED'
-    CRITICAL = 'CRITICAL'
-    FAILURE = 'FAILURE'
+if TYPE_CHECKING:
+    from sensors import Sensor
+
+
+class GlobalStateEnum(Enum):
+    NORMAL = 0
+    DEGRADED = 1
+    CRITICAL = 2
+    FAILURE = 3
 
 
 class ProductionPlant():
 
     def __init__(self) -> None:
-        self.state: PlantStateEnum = PlantStateEnum.NORMAL
-        self.sensors: dict[int, Sensor] = {}
+        self.state: GlobalStateEnum = GlobalStateEnum.NORMAL
+        self.sensors: dict[int, 'Sensor'] = {}
         
     def get_sensor(self, sensor_id):
         return self.sensors.get(sensor_id, None)
@@ -21,10 +25,10 @@ class ProductionPlant():
     def get_sensors(self):
         return dict([(sensor_id, sensor.__str__()) for sensor_id, sensor in self.sensors.items()])
 
-    def add_sensor(self, sensor: Sensor):
+    def add_sensor(self, sensor: 'Sensor'):
         self.sensors[sensor.sensor_id] = sensor
         
-    def set_state(self, state: PlantStateEnum):
+    def set_state(self, state: GlobalStateEnum):
         self.state = state
 
     
