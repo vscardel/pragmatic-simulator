@@ -41,30 +41,93 @@ class Simulator:
         globals.time += steps
         
     def initialize_sensors(self, plant: 'ProductionPlant', broker: 'Broker') -> None:
-        for _ in range(self.NUMBER_OF_SENSORS):
-            normal_min = random.randint(50, 100)
-            normal_max = random.randint(normal_min+1, 120)
-            degraded = (random.randint(30, normal_min-1),
-                        random.randint(normal_max+1, 140))
-            critical = (random.randint(0, degraded[0]-1), 
-                        random.randint(degraded[1]+1, 170))
-            sensor = Sensor(
-                sensor_id=self.next_sensor_id(),
-                # We will use the same sensor type to infer pragmatics with the same semantics
-                sensor_type=SensorTypeEnum.TEMPERATURE,
-                role=random.choice(list(SensorRoleEnum)),
-                operating_range={  # TODO: Mocked and static values, change it
-                    "normal": (normal_min, normal_max),
-                    "degraded": degraded,
-                    "critical": critical
-                },
-                mean_value=random.uniform(normal_min, normal_max),  # This value should be in the normal range
-                # Sensors that send data in a interval between 1 ms and 5 seconds
-                sampling_interval=random.randint(1, 5000)
-            )
-            print(f'{CYAN}Sensor {sensor.sensor_id} initialized with role {sensor.role} and sampling interval {sensor.sampling_interval} ms{RESET}')
-            plant.add_sensor(sensor)
-            broker.subscribe(sensor)
+        sensorBoiler = Sensor(
+            sensor_id=self.next_sensor_id(),
+            sensor_type=SensorTypeEnum.TEMPERATURE,
+            role=SensorRoleEnum.CRITICAL,
+            operating_range={
+                "normal": (190, 240),
+                "degraded": (160, 290),
+                "critical": (150, 310),
+            },
+            mean_value=210,
+            sampling_interval=1000
+        )
+        
+
+        # 1. Sensor de Mancal de Motor Elétrico de Grande Porte
+        # Monitora superaquecimento por atrito. Alta vibração ou falta de lubrificação geram calor rápido.
+        sensorMotorBearing = Sensor(
+            sensor_id=self.next_sensor_id(),
+            sensor_type=SensorTypeEnum.TEMPERATURE,
+            role=SensorRoleEnum.CRITICAL,  # Se o mancal travar, a linha para imediatamente
+            operating_range={
+                "normal": (40, 75),    # Operação segura (aquecido, mas estável)
+                # Aviso: Lubrificação necessária ou início de desgaste
+                "degraded": (30, 90),
+                "critical": (20, 110),  # Perigo: Risco iminente de fusão/travamento
+            },
+            mean_value=65,
+            sampling_interval=1000
+        )
+
+        # 2. Sensor de Tanque de Óleo Hidráulico
+        # Monitora a temperatura do fluido de prensas ou injetoras.
+        sensorHydraulicOil = Sensor(
+            sensor_id=self.next_sensor_id(),
+            sensor_type=SensorTypeEnum.TEMPERATURE,
+            role=SensorRoleEnum.NORMAL,  # Importante para a vida útil, mas falha lenta
+            operating_range={
+                "normal": (35, 55),    # Viscosidade ideal do óleo
+                # Óleo muito frio (cravitação) ou muito quente (oxidação)
+                "degraded": (25, 65),
+                "critical": (10, 80),  # Perda total de propriedades lubrificantes
+            },
+            mean_value=48,
+            sampling_interval=1000 
+        )
+
+        # 3. Sensor de Câmara Fria (Armazenamento de Matéria-Prima)
+        # Monitora conservação de químicos ou alimentos.
+        sensorColdStorage = Sensor(
+            sensor_id=self.next_sensor_id(),
+            sensor_type=SensorTypeEnum.TEMPERATURE,
+            # Perda de temperatura estraga o insumo (prejuízo financeiro)
+            role=SensorRoleEnum.CRITICAL,
+            operating_range={
+                "normal": (-5, 2),     # Faixa estrita de conservação
+                "degraded": (-8, 5),   # Porta aberta ou degelo ineficiente
+                "critical": (-15, 10),  # Produto comprometido
+            },
+            mean_value=-1,
+            sampling_interval=1000 
+        )
+
+        # 4. Sensor de Ambiente (Escritório/Vestiário)
+        # Monitora conforto térmico (HVAC) para a equipe administrativa.
+        sensorOfficeHVAC = Sensor(
+            sensor_id=self.next_sensor_id(),
+            sensor_type=SensorTypeEnum.TEMPERATURE,
+            role=SensorRoleEnum.UNINPORTANT,  # Desconforto não para a produção
+            operating_range={
+                "normal": (21, 24),    # Conforto térmico padrão
+                "degraded": (19, 27),  # Um pouco frio ou quente
+                "critical": (15, 32),  # Falha do ar condicionado
+            },
+            mean_value=23,
+            sampling_interval=1000  
+        )
+        
+        plant.add_sensor(sensorBoiler)
+        plant.add_sensor(sensorMotorBearing)
+        plant.add_sensor(sensorHydraulicOil)
+        plant.add_sensor(sensorColdStorage)
+        plant.add_sensor(sensorOfficeHVAC)
+        broker.subscribe(sensorBoiler)
+        broker.subscribe(sensorMotorBearing)
+        broker.subscribe(sensorHydraulicOil)
+        broker.subscribe(sensorColdStorage)
+        broker.subscribe(sensorOfficeHVAC)
             
     def handle_timers(self):
         for time, func in sorted(globals.timers):
