@@ -4,13 +4,8 @@ from typing import Literal
 from utils.prob_utils import prob_hour_to_prob_min
 from typing import Any
 from utils.colors import *
+from production_plant import GlobalStateEnum
 import globals
-
-class SensorStateEnum(Enum):
-    NORMAL = 0
-    DEGRADED = 1
-    CRITICAL = 2
-    FAILURE = 3
 
 class SensorRoleEnum(Enum):
     CRITICAL = 0
@@ -25,6 +20,12 @@ class SensorTypeEnum(Enum):
     MOISTURE = 4
     AIR_QUALITY = 5
 
+class SensorMessage:
+    def __init__(self, sensor_id: int, sensor_type: int, sensor_value: float, timestamp: int):
+        self.sensor_id = sensor_id
+        self.sensor_type = sensor_type
+        self.sensor_value = sensor_value
+        self.timestamp = timestamp
 
 class Sensor:    
     def __init__(self,
@@ -43,7 +44,7 @@ class Sensor:
             raise Exception("Operating range is not valid")
         self.mean_value = mean_value
         self.standard_deviation = (operating_range['normal'][1] - operating_range['normal'][0]) / 4 # About 96% of the generated data will be inside the normal range
-        self.local_state = SensorStateEnum.NORMAL
+        self.local_state = GlobalStateEnum.NORMAL
         self.sampling_interval = sampling_interval
         self.last_thousand_values: list[float] = []
         self.__initialize_transition_probabilities()
@@ -79,48 +80,29 @@ class Sensor:
 
     def __initialize_transition_probabilities(self):
         self.original_transition_probabilities = { # Values when the machine is normal
-            SensorStateEnum.NORMAL: {
-                SensorStateEnum.DEGRADED: random.uniform(prob_hour_to_prob_min(0.008), prob_hour_to_prob_min(.012)) # 0.8% to 1.2% per hour
+            GlobalStateEnum.NORMAL: {
+                GlobalStateEnum.DEGRADED: prob_hour_to_prob_min(0.01)  # 1% per hour
             },
-            SensorStateEnum.DEGRADED: {
-                SensorStateEnum.CRITICAL: random.uniform(prob_hour_to_prob_min(0.08), prob_hour_to_prob_min(0.16)), # 8% to 16% per hour
-                SensorStateEnum.NORMAL: random.uniform(prob_hour_to_prob_min(0.001), prob_hour_to_prob_min(0.002)) # 0.1% to 0.2% per hour
+            GlobalStateEnum.DEGRADED: {
+                GlobalStateEnum.CRITICAL: prob_hour_to_prob_min(0.08), # 8% per hour
+                GlobalStateEnum.NORMAL:  prob_hour_to_prob_min(0.01)  # 1% per hour
             },
-            SensorStateEnum.CRITICAL: {
-                SensorStateEnum.FAILURE: random.uniform(prob_hour_to_prob_min(0.15), prob_hour_to_prob_min(0.4)), # 15% to 40% per hour
-                SensorStateEnum.DEGRADED: random.uniform(prob_hour_to_prob_min(0.001), prob_hour_to_prob_min(0.002)) # 1% to 2% per hour
+            GlobalStateEnum.CRITICAL: {
+                GlobalStateEnum.FAILURE: prob_hour_to_prob_min(0.15), # 15% per hour
+                GlobalStateEnum.DEGRADED: prob_hour_to_prob_min(0.005)  # 0.5% per hour
             }
         }
         self.transition_probabilities = self.original_transition_probabilities
-        print(f'Sensor {self.sensor_id} initialized with transition probabilities:')
-        print(f'NORMAL->DEGRADED: {self.transition_probabilities[SensorStateEnum.NORMAL][SensorStateEnum.DEGRADED]}')
-        print(f'DEGRADED->CRITICAL: {self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.CRITICAL]}')
-        print(f'CRITICAL->FAILURE: {self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.FAILURE]}')
-        print(f'CRITICAL->DEGRADED: {self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.DEGRADED]}')
-        print(f'DEGRADED->NORMAL: {self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.NORMAL]}')
-
-    # Not used yet
-    # def adjust_probabilities_by_time_passing(self):
-    #     if (self.local_state == SensorStateEnum.NORMAL):
-    #         self.transition_probabilities[SensorStateEnum.NORMAL][SensorStateEnum.DEGRADED] += 0.0001 # increase by 0.01%
-        
-    #     if (self.local_state == SensorStateEnum.DEGRADED):
-    #         self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.CRITICAL] += 0.0002 # increase by 0.02%
-    #         self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.NORMAL] -= 0.0001 # decrease by 0.01%
-        
-    #     if (self.local_state == SensorStateEnum.CRITICAL):
-    #         self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.FAILURE] += 0.0004 # increase by 0.04%
-    #         self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.DEGRADED] -= 0.0002 # decrease by 0.02%
-        
+      
     def auto_set_mean_value(self):
         # Calculate the size of the ranges
         normal_range = self.operating_range['normal'][1] - self.operating_range['normal'][0]
         
-        if self.local_state == SensorStateEnum.NORMAL:
+        if self.local_state == GlobalStateEnum.NORMAL:
             # Change mean value to a random value inside the normal range
             self.mean_value = random.uniform(self.operating_range['normal'][0], self.operating_range['normal'][1])
-        elif self.local_state == SensorStateEnum.DEGRADED:
-            if self.old_state == SensorStateEnum.NORMAL:
+        elif self.local_state == GlobalStateEnum.DEGRADED:
+            if self.old_state == GlobalStateEnum.NORMAL:
                 # Change mean value to a random value inside the degraded range but outside the normal range
                 self.mean_value = random.uniform(self.operating_range['degraded'][0], self.operating_range['degraded'][1] - normal_range)
                 if self.mean_value >= self.operating_range['normal'][0] and self.mean_value <= self.operating_range['normal'][1]:
@@ -133,7 +115,7 @@ class Sensor:
                 else:
                     # Change mean value to the right of the normal range
                     self.mean_value = random.uniform(self.operating_range['normal'][1], self.operating_range['degraded'][1])
-        elif self.local_state == SensorStateEnum.CRITICAL:
+        elif self.local_state == GlobalStateEnum.CRITICAL:
             # Verify if the mean value is more to the left or to the right of the degraded range
             degraded_to_left = self.mean_value < self.operating_range['normal'][0]
             if (degraded_to_left):
@@ -142,7 +124,7 @@ class Sensor:
             else:
                 # Change mean value to the right of the degraded range
                 self.mean_value = random.uniform(self.operating_range['degraded'][1], self.operating_range['critical'][1])
-        elif self.local_state == SensorStateEnum.FAILURE:
+        elif self.local_state == GlobalStateEnum.FAILURE:
             # Verify if the mean value is more to the left or to the right of the critical range
             critical_to_left = self.mean_value < self.operating_range['normal'][0]
             if (critical_to_left):
@@ -172,7 +154,7 @@ class Sensor:
         """
         rand_value = random.uniform(0, 1)
         
-        possibly_states = self.transition_probabilities[self.local_state] if self.local_state != SensorStateEnum.FAILURE else {}
+        possibly_states = self.transition_probabilities[self.local_state] if self.local_state != GlobalStateEnum.FAILURE else {}
         
         prob_sum = 0
         
@@ -184,12 +166,6 @@ class Sensor:
                 self.last_update_by_prob = (globals.time, self.old_state, self.local_state)
                 print(
                     f"{MAGENTA}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {self.old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
-                globals.actuator.sp = True
-                # print(f'NORMAL->DEGRADED: {self.transition_probabilities[SensorStateEnum.NORMAL][SensorStateEnum.DEGRADED]}')
-                # print(f'DEGRADED->CRITICAL: {self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.CRITICAL]}')
-                # print(f'DEGRADED->NORMAL: {self.transition_probabilities[SensorStateEnum.DEGRADED][SensorStateEnum.NORMAL]}')
-                # print(f'CRITICAL->FAILURE: {self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.FAILURE]}')
-                # print(f'CRITICAL->DEGRADED: {self.transition_probabilities[SensorStateEnum.CRITICAL][SensorStateEnum.DEGRADED]}')
                 break
     
     def get_last_update_by_prob(self):
@@ -215,13 +191,10 @@ class Sensor:
         The method prints a message indicating the update of the sensor's state.
         """
         self.old_state = self.local_state
-        if (self.local_state == SensorStateEnum.DEGRADED):
-            self.local_state = SensorStateEnum.NORMAL
-            print(f"{GREEN}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id} ({self.get_true_role()}) upkept from DEGRADED to NORMAL{RESET}")
-        elif (self.local_state == SensorStateEnum.CRITICAL):
-            self.local_state = SensorStateEnum.DEGRADED
-            print(
-                f"{GREEN}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id} ({self.get_true_role()}) upkept from from CRITICAL to DEGRADED{RESET}")
+        if (self.local_state == GlobalStateEnum.DEGRADED):
+            self.local_state = GlobalStateEnum.NORMAL
+        elif (self.local_state == GlobalStateEnum.CRITICAL):
+            self.local_state = GlobalStateEnum.DEGRADED
         self.auto_set_mean_value()
         self.last_upkeep = (globals.time, self.old_state, self.local_state)
         
@@ -260,16 +233,16 @@ class Sensor:
         else:
             return None
 
-    def send_data(self) -> dict[str, Any] | None:
+    def send_data(self) -> SensorMessage | None:
         if (globals.time % self.sampling_interval != 0): 
             return None
         
-        message={
-            'sensor_id': self.sensor_id,
-            'sensor_type': self.sensor_type.value,
-            'sensor_value': self.read_value(),
-            'timestamp': globals.time
-        }
+        message=SensorMessage(
+            sensor_id= self.sensor_id,
+            sensor_type= self.sensor_type.value,
+            sensor_value= self.read_value(),
+            timestamp= globals.time
+        )
         self.last_message = message
         return message
 
