@@ -104,15 +104,10 @@ class Actuator:
     def update_sensors_states(self, all_messages: list[BrokerMessage]):
         """
         Updates the state of the sensors based on the messages received. The sensors to be updated are
-        chosen based on the load term, which is a value between 0 and 1. The load term is calculated as
-        the minimum between 1 and the THRESHOLD_LOAD divided by the load of the actuator. The sensors
-        are ordered by their sum of impact in descending order, and the first load_term % sensors are 
+        chosen based on the impact of the its messages. The sensors are ordered by their sum of impact 
+        in descending order, and the first self.available_teams sensors are
         chosen to be updated. If the sensor is not in the NORMAL state, its upkeep method is called.
         """
-
-        # The load term is a value between 0 and 1
-        # thats indicates how much % of the sensors
-        # with positive sum of impact by messages will be upkept
 
         self.sensors_sum_impact = self.compute_messages_impact(all_messages)
         positive_sensors_sum_impact = dict(filter(lambda item: item[1] > 0, self.sensors_sum_impact.items()))
@@ -141,7 +136,9 @@ class Actuator:
     def get_available_teams(self):
         return self.available_teams
 
+
     def get_last_load_term(self):
+        """@deprecated"""
         if ('load_term' in self.__dict__):
             return self.load_term
         else:

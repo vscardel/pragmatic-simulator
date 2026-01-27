@@ -65,6 +65,8 @@ type ActuatorData = {
   last_sensors_to_analyze: [number, number][] | null;
   last_sensors_sum_impact_ordered: [number, number][] | null;
   last_pondered_state: number | null;
+  available_teams: number;
+  MAX_ACTUATOR_WORKLOAD: number;
 };
 
 type BrokerData = {
@@ -288,7 +290,7 @@ function updateActuatorTable(data: ActuatorData) {
   actuatorTableBodyRow!.innerHTML = `
     <td>${data.load} (${((data.load / data.THRESHOLD_LOAD) * 100).toFixed(2)}%)</td>
     <td>${data.THRESHOLD_LOAD}</td>
-    <td><div>${data.last_load_term?.toFixed(5)} (${((data.last_load_term ?? NaN) * 100).toFixed(2)}%)</div>${buildLoadTermBar(data.last_sensors_sum_impact_ordered ?? [], data.last_load_term ?? 0).outerHTML}</td>
+    <td><div>${data.available_teams}/${data.MAX_ACTUATOR_WORKLOAD}</div>${buildAvailableTeamsBar(data.available_teams, data.MAX_ACTUATOR_WORKLOAD).outerHTML}</td>
     <td><div>${data.last_pondered_state?.toFixed(4)} (${SensorStateEnum[data.global_state[0]]})</div>${buildPonderedStateBar(data.last_pondered_state ?? 0).outerHTML}</td>
   `;
 }
@@ -397,4 +399,24 @@ function formatMilliseconds(ms: number): string {
   }
 
   return parts.length ? parts.join(", ") : "0 ms";
+}
+
+function buildAvailableTeamsBar(available_teams: number, max_teams: number) {
+  const container = document.createElement("div");
+  container.style.display = "grid";
+  container.style.border = "1px solid black";
+  container.style.position = "relative";
+  container.style.height = "30px";
+  container.style.gridTemplateColumns = `repeat(${max_teams}, 1fr)`;
+
+  for (let i = 0; i < max_teams; i++) {
+    const block = document.createElement("div");
+    block.style.height = "100%";
+    block.style.display = "flex";
+    if (i !== max_teams - 1) block.style.borderRight = "1px solid black";
+    if (i < available_teams) block.style.backgroundColor = "#00b300";
+    container.appendChild(block);
+  }
+
+  return container;
 }

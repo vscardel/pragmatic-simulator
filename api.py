@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import globals
 from simulator import Simulator
 import threading
+import config
 
 app = FastAPI()
 
@@ -43,10 +44,12 @@ def read_actuator():
         "global_state": globals.actuator.global_state,
         "THRESHOLD_LOAD": globals.actuator.THRESHOLD_LOAD,
         "last_messages_impact": globals.actuator.get_last_messages_impact(),
-        "last_load_term": globals.actuator.get_last_load_term(),
+        "last_load_term": globals.actuator.get_last_load_term(), # Deprecated
         "last_sensors_to_analyze": globals.actuator.get_last_sensors_to_analyze(),
         "last_sensors_sum_impact_ordered": globals.actuator.get_last_sensors_sum_impact_ordered(),
         "last_pondered_state": globals.actuator.get_pondered_state(),
+        "available_teams": globals.actuator.get_available_teams(),
+        "MAX_ACTUATOR_WORKLOAD": config.MAX_ACTUATOR_WORKLOAD
     }
 
 
