@@ -25,7 +25,8 @@ def prob_hour_to_prob_sec(p_hour: float):
     Returns:
     float: Probability per second.
     """
-    return 1-math.pow(1-p_hour, 1/3600)
+    return 1-math.pow(1-p_hour, 1/3600)  # TODO: fix it to 1/3600
+    
 
 def prob_hour_to_prob_min(p_hour: float):
     """
@@ -37,4 +38,4 @@ def prob_hour_to_prob_min(p_hour: float):
     Returns:
     float: Probability per minute.
     """
-    return 1-math.pow(1-p_hour, 1/6) # fix to 1/60
+    return 1-math.pow(1-p_hour, 1/60)

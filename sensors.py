@@ -1,7 +1,7 @@
 import random
 from enum import Enum
 from typing import Literal
-from utils.prob_utils import prob_hour_to_prob_min
+from utils.prob_utils import prob_hour_to_prob_sec
 from typing import Any
 from utils.colors import *
 from production_plant import GlobalStateEnum
@@ -14,11 +14,6 @@ class SensorRoleEnum(Enum):
 
 class SensorTypeEnum(Enum):
     TEMPERATURE = 0
-    HUMIDITY = 1
-    PRESSURE = 2
-    LIGHT = 3
-    MOISTURE = 4
-    AIR_QUALITY = 5
 
 class SensorMessage:
     def __init__(self, sensor_id: int, sensor_type: int, sensor_value: float, timestamp: int):
@@ -30,6 +25,7 @@ class SensorMessage:
 class Sensor:    
     def __init__(self,
                  sensor_id: int,
+                 sensor_label: str,
                  sensor_type: SensorTypeEnum,
                  role: SensorRoleEnum,  # The relevance of the sensor
                  operating_range: dict[Literal["normal", "degraded", "critical"], tuple[int, int]],
@@ -37,6 +33,7 @@ class Sensor:
                  sampling_interval: int = 0, # 0 = every millisecond
                 ):
         self.sensor_id = sensor_id
+        self.sensor_label = sensor_label
         self.sensor_type = sensor_type
         self.role = role
         self.operating_range = operating_range
@@ -48,6 +45,10 @@ class Sensor:
         self.sampling_interval = sampling_interval
         self.last_thousand_values: list[float] = []
         self.__initialize_transition_probabilities()
+        self.under_maintenance = False
+        
+    def finish_maintenance(self):
+        self.under_maintenance = False
 
     def __operating_range_is_ok(self):
         """
@@ -81,15 +82,15 @@ class Sensor:
     def __initialize_transition_probabilities(self):
         self.original_transition_probabilities = { # Values when the machine is normal
             GlobalStateEnum.NORMAL: {
-                GlobalStateEnum.DEGRADED: prob_hour_to_prob_min(0.01)  # 1% per hour
+                GlobalStateEnum.DEGRADED: prob_hour_to_prob_sec(0.01)  # 1% per hour
             },
             GlobalStateEnum.DEGRADED: {
-                GlobalStateEnum.CRITICAL: prob_hour_to_prob_min(0.08), # 8% per hour
-                GlobalStateEnum.NORMAL:  prob_hour_to_prob_min(0.01)  # 1% per hour
+                GlobalStateEnum.CRITICAL: prob_hour_to_prob_sec(0.08), # 8% per hour
+                GlobalStateEnum.NORMAL:  prob_hour_to_prob_sec(0.01)  # 1% per hour
             },
             GlobalStateEnum.CRITICAL: {
-                GlobalStateEnum.FAILURE: prob_hour_to_prob_min(0.15), # 15% per hour
-                GlobalStateEnum.DEGRADED: prob_hour_to_prob_min(0.005)  # 0.5% per hour
+                GlobalStateEnum.FAILURE: prob_hour_to_prob_sec(0.15), # 15% per hour
+                GlobalStateEnum.DEGRADED: prob_hour_to_prob_sec(0.005)  # 0.5% per hour
             }
         }
         self.transition_probabilities = self.original_transition_probabilities
@@ -191,10 +192,7 @@ class Sensor:
         The method prints a message indicating the update of the sensor's state.
         """
         self.old_state = self.local_state
-        if (self.local_state == GlobalStateEnum.DEGRADED):
-            self.local_state = GlobalStateEnum.NORMAL
-        elif (self.local_state == GlobalStateEnum.CRITICAL):
-            self.local_state = GlobalStateEnum.DEGRADED
+        self.local_state = GlobalStateEnum.NORMAL
         self.auto_set_mean_value()
         self.last_upkeep = (globals.time, self.old_state, self.local_state)
         

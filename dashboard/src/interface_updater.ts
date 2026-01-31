@@ -35,6 +35,7 @@ type SensorMessage = {
 
 type SensorData = {
   sensor_id: number;
+  sensor_label: string;
   sensor_type: [keyof typeof SensorTypeEnum, SensorTypeEnum];
   role: [keyof typeof SensorRoleEnum, SensorRoleEnum];
   operating_range: OperatingRange;
@@ -54,19 +55,15 @@ type SensorData = {
     timestamp: number;
   } | null;
   old_state: SensorStateEnum | null;
+  under_maintenance: boolean;
 };
 
 type ActuatorData = {
-  load: number;
-  global_state: [number, SensorStateEnum];
-  THRESHOLD_LOAD: number;
   last_messages_impact: Record<string, number> | null;
-  last_load_term: number | null;
   last_sensors_to_analyze: [number, number][] | null;
   last_sensors_sum_impact_ordered: [number, number][] | null;
-  last_pondered_state: number | null;
   available_teams: number;
-  MAX_ACTUATOR_WORKLOAD: number;
+  MAX_ACTUATOR_TEAMS: number;
 };
 
 type BrokerData = {
@@ -89,6 +86,7 @@ enum PlantStateEnum {
 type ProductionPlantData = {
   state: PlantStateEnum;
   sensors: Record<`${number}`, string>;
+  measured_state: number;
 };
 
 type AllData = {
@@ -96,17 +94,19 @@ type AllData = {
   sensors: SensorData[];
   actuator: ActuatorData;
   broker: BrokerData;
-  production_plant: ProductionPlantData;
+  plant: ProductionPlantData;
 };
 
 const timeDiv = document.getElementById("time");
 const sensorsTableBody = document.getElementById("sensors_table_body");
 const actuatorTableBodyRow = document.getElementById("actuator_table_body_row");
+const plantTableBodyRow = document.getElementById("plant_table_body_row");
 
 function updateInterface(data: AllData) {
   updateTime(data.time);
   updateSensorsTable(data.sensors, data.actuator);
   updateActuatorTable(data.actuator);
+  updatePlantTable(data.plant);
 }
 
 function updateTime(time: number) {
@@ -120,6 +120,7 @@ function updateSensorsTable(sensors: SensorData[], actuator: ActuatorData) {
     const row = document.createElement("tr");
     row.innerHTML = `
             <td>${sensor.sensor_id}</td>
+            <td>${sensor.sensor_label}</td>
             <td style="background-color: ${sensor.role[1] === SensorRoleEnum.CRITICAL ? "#ff00005a" : sensor.role[1] === SensorRoleEnum.NORMAL ? "#5d5dff5a" : "#a9a9a95a"}">${sensor.role[0]}</td>
             <td style="background-color: ${sensor.old_state === null ? "transparent" : sensor.old_state === SensorStateEnum.NORMAL ? "#00b30037" : sensor.old_state === SensorStateEnum.DEGRADED ? "#fff00037" : sensor.old_state === SensorStateEnum.CRITICAL ? "#ff000037" : "#00000037"}">${sensor.old_state === null ? "-" : SensorStateEnum[sensor.old_state]}</td>
             <td style="background-color: ${sensor.local_state === null ? "transparent" : sensor.local_state === SensorStateEnum.NORMAL ? "#00b3005a" : sensor.local_state === SensorStateEnum.DEGRADED ? "#fff0005a" : sensor.local_state === SensorStateEnum.CRITICAL ? "#ff00005a" : "#0000005a"}">${SensorStateEnum[sensor.local_state]}</td>
@@ -141,6 +142,7 @@ function updateSensorsTable(sensors: SensorData[], actuator: ActuatorData) {
             }</td>
             <td>${sensor.sampling_interval}</td>
             <td>${actuator.last_messages_impact?.[sensor.sensor_id.toString()].toFixed(4)}</td>
+            <td style="background-color: ${!sensor.under_maintenance ? "#ff00005a" : "#00ff005a"}">${sensor.under_maintenance}</td>
             <td style="background-color: ${actuator.last_sensors_to_analyze?.find((s) => s[0] === sensor.sensor_id) ? "#00ff005a" : "#ff00005a"}">${actuator.last_sensors_to_analyze?.find((s) => s[0] === sensor.sensor_id) ? "Yes" : "No"}</td>
         `;
     sensorsTableBody!.appendChild(row);
@@ -288,10 +290,13 @@ function createSensorBarChart({
 
 function updateActuatorTable(data: ActuatorData) {
   actuatorTableBodyRow!.innerHTML = `
-    <td>${data.load} (${((data.load / data.THRESHOLD_LOAD) * 100).toFixed(2)}%)</td>
-    <td>${data.THRESHOLD_LOAD}</td>
-    <td><div>${data.available_teams}/${data.MAX_ACTUATOR_WORKLOAD}</div>${buildAvailableTeamsBar(data.available_teams, data.MAX_ACTUATOR_WORKLOAD).outerHTML}</td>
-    <td><div>${data.last_pondered_state?.toFixed(4)} (${SensorStateEnum[data.global_state[0]]})</div>${buildPonderedStateBar(data.last_pondered_state ?? 0).outerHTML}</td>
+    <td><div>${data.available_teams}/${data.MAX_ACTUATOR_TEAMS}</div>${buildAvailableTeamsBar(data.available_teams, data.MAX_ACTUATOR_TEAMS).outerHTML}</td>
+  `;
+}
+
+function updatePlantTable(data: ProductionPlantData) {
+  plantTableBodyRow!.innerHTML = `
+    <td><div style="width: 300px;">${data.measured_state}</div>${buildMeasuredStateBar(data.measured_state).outerHTML}</td>
   `;
 }
 
@@ -325,7 +330,7 @@ function buildLoadTermBar(last_sensors_sum_impact_ordered: [number, number][], l
   return container;
 }
 
-function buildPonderedStateBar(ponderedState: number) {
+function buildMeasuredStateBar(ponderedState: number) {
   const container = document.createElement("div");
   container.style.display = "grid";
   container.style.position = "relative";

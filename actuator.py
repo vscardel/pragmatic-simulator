@@ -1,11 +1,10 @@
 from production_plant import GlobalStateEnum, ProductionPlant
-from sensors import SensorRoleEnum
+from sensors import SensorRoleEnum, Sensor
 from broker import BrokerMessage
 import random
 from utils.colors import *
 import globals
 import math
-import config
 from utils.timers import add_relative_timer
 
 STATE_SEVERITY = {
@@ -15,12 +14,6 @@ STATE_SEVERITY = {
     GlobalStateEnum.FAILURE: 3,
 }
 
-# Used to calculate the pressure that the messages exert on the actuator
-ROLE_IMPACT = {
-    SensorRoleEnum.CRITICAL: 1.0,
-    SensorRoleEnum.NORMAL: 0.0,
-    SensorRoleEnum.UNINPORTANT: -0.3,
-}
 
 # Used to calculate the global state
 ROLE_WEIGHT = {
@@ -30,7 +23,7 @@ ROLE_WEIGHT = {
 }
 
 TIME_TO_RECOVER = {
-    GlobalStateEnum.NORMAL: 10 * 60000,  # 10 minutes
+    GlobalStateEnum.NORMAL: 10 * 60000,  # 5 minutes
     GlobalStateEnum.DEGRADED: 90 * 60000,  # 1 hour and 30 minutes
     GlobalStateEnum.CRITICAL: 4 * 3600000,  # 4 hours
 }
@@ -40,10 +33,11 @@ class Actuator:
     THRESHOLD_LOAD = 50  # Used to calculate the overload that the actuator is under
 
     def __init__(self, production_plant: ProductionPlant):
-        self.available_teams = config.MAX_ACTUATOR_WORKLOAD
-        self.load = 0
+        self.available_teams = globals.MAX_ACTUATOR_TEAMS
         self.production_plant = production_plant
-        self.global_state = (production_plant.state, self.load)
+        self.unnecessary_maintenances = 0
+        self.total_maintenances = 0
+        self.total_maintenance_time = 0
 
     def update_global_state(self):
         """
@@ -63,16 +57,11 @@ class Actuator:
                 sensor.local_state.value
             sumWeight += ROLE_WEIGHT[sensor.get_true_role()]
 
-        self.pondered_state = sumTop / sumWeight
-        aux = self.pondered_state / 0.75
-        self.production_plant.set_state(math.floor(aux))
-        self.global_state = (self.production_plant.state, self.load)
+        measured_state = sumTop / sumWeight
+        normalized_state = measured_state / 0.75
+        self.production_plant.set_measured_state(measured_state)
+        self.production_plant.set_state(math.floor(normalized_state))
 
-    def get_pondered_state(self):
-        if ('pondered_state' in self.__dict__):
-            return self.pondered_state
-        else:
-            return None
 
     def compute_messages_impact(self, messages: list[BrokerMessage]) -> dict[int, float]:
         """
@@ -126,9 +115,16 @@ class Actuator:
             if (sensor.local_state == GlobalStateEnum.FAILURE):
                 continue
             
+            
+            sensor.under_maintenance = True
             add_relative_timer(TIME_TO_RECOVER[sensor.local_state], self.make_team_available)
+            add_relative_timer(TIME_TO_RECOVER[sensor.local_state], sensor.finish_maintenance)
+            
             self.available_teams -= 1
+            self.total_maintenances += 1
+            self.total_maintenance_time += TIME_TO_RECOVER[sensor.local_state]
             if (sensor.local_state != GlobalStateEnum.NORMAL): sensor.upkeep()
+            else: self.unnecessary_maintenances += 1
             
     def make_team_available(self):
         self.available_teams += 1
@@ -163,7 +159,5 @@ class Actuator:
             return None
 
     def step(self, messages: list[BrokerMessage]):
-        self.load = len(messages)
-
         self.update_sensors_states(messages)
         self.update_global_state()

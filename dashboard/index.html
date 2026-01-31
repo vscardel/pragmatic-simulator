@@ -20,14 +20,23 @@
 
         <div id="time"></div>
 
+        <h3>Plant</h3>
+        <table id="plant_table">
+            <thead class="table_head">
+                <tr>
+                    <th>state</th>
+                </tr>
+            </thead>
+            <tbody id="plant_table_body">
+                <tr id="plant_table_body_row"></tr>
+            </tbody>
+        </table>
+
         <h3>Actuator</h3>
         <table id="actuator_table">
             <thead class="table_head">
                 <tr>
-                    <th>Load</th>
-                    <th>THRESHOLD_LOAD</th>
                     <th>available_teams</th>
-                    <th>last_pondered_state</th>
                 </tr>
             </thead>
             <tbody id="actuator_table_body">
@@ -40,6 +49,7 @@
             <thead class="table_head" id="sensors_table_head">
                 <tr>
                     <th>Sensors</th>
+                    <th>Label</th>
                     <th>Role</th>
                     <th>Old state</th>
                     <th>State</th>
@@ -50,6 +60,7 @@
                     <th>Operating range</th>
                     <th>Sampling interval</th>
                     <th>Last messages impact</th>
+                    <th>Under maintenance?</th>
                     <th>Analyzed?</th>
                 </tr>
             </thead>

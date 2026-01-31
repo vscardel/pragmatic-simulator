@@ -1,10 +1,8 @@
 from fastapi import FastAPI
-from typing import Union
 from fastapi.middleware.cors import CORSMiddleware
 import globals
 from simulator import Simulator
 import threading
-import config
 
 app = FastAPI()
 
@@ -40,29 +38,18 @@ def read_time():
 @app.get("/actuator")
 def read_actuator():
     return {
-        "load": globals.actuator.load,
-        "global_state": globals.actuator.global_state,
-        "THRESHOLD_LOAD": globals.actuator.THRESHOLD_LOAD,
         "last_messages_impact": globals.actuator.get_last_messages_impact(),
-        "last_load_term": globals.actuator.get_last_load_term(), # Deprecated
         "last_sensors_to_analyze": globals.actuator.get_last_sensors_to_analyze(),
         "last_sensors_sum_impact_ordered": globals.actuator.get_last_sensors_sum_impact_ordered(),
-        "last_pondered_state": globals.actuator.get_pondered_state(),
         "available_teams": globals.actuator.get_available_teams(),
-        "MAX_ACTUATOR_WORKLOAD": config.MAX_ACTUATOR_WORKLOAD
+        "MAX_ACTUATOR_TEAMS": globals.MAX_ACTUATOR_TEAMS
     }
 
 
 @app.get("/broker")
 def read_broker():
     return {
-        "subscribers": globals.broker.subscribers,
-        "queue": globals.broker.queue,
-        "MAX_QUEUE_SIZE": globals.broker.MAX_QUEUE_SIZE,
-        "DROPPED_MESSAGES_COUNT": globals.broker.DROPPED_MESSAGES_COUNT,
-        "DROPPED_MESSAGES_BY_FULL_QUEUE": globals.broker.DROPPED_MESSAGES_BY_FULL_QUEUE,
-        "ROUND_DROPPED_MESSAGES_COUNT": globals.broker.ROUND_DROPPED_MESSAGES_COUNT,
-        "ROUND_DROPPED_MESSAGES_BY_FULL_QUEUE": globals.broker.ROUND_DROPPED_MESSAGES_BY_FULL_QUEUE,
+        "buffer": globals.broker.buffer,
     }
 
 
@@ -71,6 +58,7 @@ def read_plant():
     return {
         "state": globals.plant.state,
         "sensors": globals.plant.get_sensors(),
+        "measured_state": globals.plant.measured_state
     }
 
 
@@ -78,6 +66,7 @@ def read_plant():
 def read_sensors():
     return [{
         "sensor_id": sensor.sensor_id,
+        "sensor_label": sensor.sensor_label,
         "sensor_type": (sensor.sensor_type.name, sensor.sensor_type.value),
         "role": (sensor.role.name, sensor.role.value),
         "operating_range": sensor.operating_range,
@@ -92,6 +81,7 @@ def read_sensors():
         "last_value": sensor.get_last_value(),
         "last_message": sensor.get_last_message(),
         "old_state": sensor.get_old_state(),
+        "under_maintenance": sensor.under_maintenance 
     } for sensor in globals.plant.sensors.values()]
 
 @app.post("/start")

@@ -17,6 +17,7 @@ class ProductionPlant():
 
     def __init__(self) -> None:
         self.state: GlobalStateEnum = GlobalStateEnum.NORMAL
+        self.measured_state: float = 0 # float between 0 and 3
         self.sensors: dict[int, 'Sensor'] = {}
         
     def get_sensor(self, sensor_id):
@@ -30,5 +31,8 @@ class ProductionPlant():
         
     def set_state(self, state: GlobalStateEnum):
         self.state = state
+        
+    def set_measured_state(self, state: float):
+        self.measured_state = state
 
     
