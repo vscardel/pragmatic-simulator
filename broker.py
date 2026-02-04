@@ -26,7 +26,7 @@ class Broker:
         self.do_nothing_count = 0
         self.upkeep_count = 0
         self.necessary_upkeep_count = 0
-        pass
+        
 
     def publish(self, sensor_id: int, data: SensorMessage) -> bool:
 

@@ -42,24 +42,23 @@ class Sensor:
             raise Exception("Operating range is not valid")
         self.mean_value = mean_value
         self.standard_deviation = (operating_range['normal'][1] - operating_range['normal'][0]) / 4 # About 96% of the generated data will be inside the normal range
+        self.old_state: GlobalStateEnum | None = None 
+        self.last_update_by_prob: tuple[int, GlobalStateEnum, GlobalStateEnum] | None = None
+        self.last_upkeep: tuple[int, GlobalStateEnum, GlobalStateEnum] | None = None
+        self.last_thousand_values: list[float] = []
+        self.last_value: float | None = None
+        self.last_message: SensorMessage | None = None
         self.local_state = GlobalStateEnum.NORMAL
         self.sampling_interval = sampling_interval
         self.last_thousand_values: list[float] = []
         self.__initialize_transition_probabilities()
         self.under_maintenance: Union[Literal[False], GlobalStateEnum] = False
-        self.mean_reaction_time_degraded: float | None = None
-        self.degraded_maintenances = 0
-        self.mean_reaction_time_critical: float | None = None
-        self.critical_maintenances = 0
         self.total_maintenance_time = 0
         
     def finish_maintenance(self):
         if (self.under_maintenance == False): return
         self.total_maintenance_time += globals.time - globals.TIME_TO_RECOVER[self.under_maintenance]
         self.under_maintenance = False
-
-    def get_total_maintenance_time(self):
-        return self.total_maintenance_time
 
     def __operating_range_is_ok(self):
         """
@@ -180,17 +179,6 @@ class Sensor:
                     f"{MAGENTA}Time: {globals.time } ms, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {self.old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
                 break
     
-    def get_last_update_by_prob(self):
-        if ('last_update_by_prob' in self.__dict__):
-            return self.last_update_by_prob
-        else:
-            return None
-        
-    def get_old_state(self):
-        if ('old_state' in self.__dict__):
-            return self.old_state
-        else:
-            return None
 
     def upkeep(self):
         """
@@ -207,26 +195,16 @@ class Sensor:
         self.auto_set_mean_value()
         self.last_upkeep = (globals.time, self.old_state, self.local_state)
         if self.old_state == GlobalStateEnum.DEGRADED:
-            self.mean_reaction_time_degraded = ((self.mean_reaction_time_degraded if self.mean_reaction_time_degraded else 0) * self.degraded_maintenances + (globals.time - self.last_update_by_prob[0])) / (self.degraded_maintenances + 1)
-            self.degraded_maintenances += 1
+            globals.mean_reaction_time_degraded = ((globals.mean_reaction_time_degraded if globals.mean_reaction_time_degraded else 0)
+                                                   * globals.degraded_maintenances + (globals.time - self.last_update_by_prob[0])) / (globals.degraded_maintenances + 1)
+            globals.degraded_maintenances += 1
         if self.old_state == GlobalStateEnum.CRITICAL:
-            self.mean_reaction_time_critical = ((self.mean_reaction_time_critical if self.mean_reaction_time_critical else 0) * self.critical_maintenances + (globals.time - self.last_update_by_prob[0])) / (self.critical_maintenances + 1)
-            self.critical_maintenances += 1
+            globals.mean_reaction_time_critical = ((globals.mean_reaction_time_critical if globals.mean_reaction_time_critical else 0) * globals.critical_maintenances + (globals.time - self.last_update_by_prob[0])) / (globals.critical_maintenances + 1)
+            globals.critical_maintenances += 1
         if (self.old_state != GlobalStateEnum.NORMAL):
             print(
                 f"{GREEN}Time: {globals.time} ms, Sensor {self.sensor_id}({self.get_true_role()}) upkeep from {self.old_state} and now has a mean value of {self.mean_value}{RESET}")
             
-    def get_mean_reaction_time_degraded(self):
-        return self.mean_reaction_time_degraded
-        
-    def get_mean_reaction_time_critical(self):
-        return self.mean_reaction_time_critical
-        
-    def get_last_upkeep(self):
-        if ('last_upkeep' in self.__dict__):
-            return self.last_upkeep
-        else:
-            return None
         
     def get_true_role(self):
         return self.role
@@ -245,17 +223,6 @@ class Sensor:
         self.last_thousand_values = self.last_thousand_values[-2000:] 
         return self.last_value  
 
-    def get_last_value(self):
-        if ('last_value' in self.__dict__):
-            return self.last_value
-        else:
-            return None
-        
-    def get_last_thousand_values(self):
-        if ('last_thousand_values' in self.__dict__):
-            return self.last_thousand_values
-        else:
-            return None
 
     def send_data(self) -> SensorMessage | None:
         if (globals.time % self.sampling_interval != 0): 
@@ -270,10 +237,5 @@ class Sensor:
         self.last_message = message
         return message
 
-    def get_last_message(self):
-        if ('last_message' in self.__dict__):
-            return self.last_message
-        else:
-            return None
     
     

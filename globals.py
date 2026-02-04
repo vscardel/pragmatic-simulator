@@ -25,6 +25,10 @@ MAX_ACTUATOR_TEAMS = 2
 STEP_JUMP = 1000
 SAVE_DATA_INTERVAL = 60 * 60 * 1000  # 1 hour
 timers: list[tuple[int, uuid.UUID, Callable]] = []
+mean_reaction_time_degraded: float | None = None
+mean_reaction_time_critical: float | None = None
+degraded_maintenances = 0
+critical_maintenances = 0
 
 TIME_TO_RECOVER = {
     GlobalStateEnum.NORMAL: 10 * 60000,  # 5 minutes

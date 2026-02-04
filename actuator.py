@@ -32,6 +32,10 @@ class Actuator:
         self.total_maintenances = 0
         self.correct_inferred_state = 0
         self.correct_inferred_role = 0
+        self.last_messages_impact: dict[int, float] = {}
+        self.sensors_sum_impact: dict[int, float] = {}
+        self.sensors_sum_impact_ordered: list[tuple[int, float]] = []
+        self.sensors_to_analyze: list[tuple[int, float]] = []
 
     def update_global_state(self):
         """
@@ -78,11 +82,6 @@ class Actuator:
         self.last_messages_impact = messages_impact
         return messages_impact
 
-    def get_last_messages_impact(self):
-        if ('last_messages_impact' in self.__dict__):
-            return self.last_messages_impact
-        else:
-            return None
 
     def update_sensors_states(self, all_messages: list[BrokerMessage]):
         """
@@ -93,9 +92,8 @@ class Actuator:
         """
 
         self.sensors_sum_impact = self.compute_messages_impact(all_messages)
-        positive_sensors_sum_impact = dict(filter(lambda item: item[1] > 0, self.sensors_sum_impact.items()))
         self.sensors_sum_impact_ordered = sorted(
-            positive_sensors_sum_impact.items(), key=lambda item: item[1], reverse=True)
+            self.sensors_sum_impact.items(), key=lambda item: item[1], reverse=True)
 
         # Get the first self.available_teams sensors
         self.sensors_to_analyze = self.sensors_sum_impact_ordered[:self.available_teams]
@@ -122,27 +120,6 @@ class Actuator:
     def make_team_available(self):
         self.available_teams += 1
         
-    def get_available_teams(self):
-        return self.available_teams
-
-
-    def get_last_sensors_to_analyze(self):
-        if ('sensors_to_analyze' in self.__dict__):
-            return self.sensors_to_analyze
-        else:
-            return None
-        
-    def get_last_sensors_sum_impact(self):
-        if ('sensors_sum_impact' in self.__dict__):
-            return self.sensors_sum_impact
-        else:
-            return None
-
-    def get_last_sensors_sum_impact_ordered(self):
-        if ('sensors_sum_impact_ordered' in self.__dict__):
-            return self.sensors_sum_impact_ordered
-        else:
-            return None
 
     def compute_correct_inferred_state_and_role(self, messages: list[BrokerMessage]):
         for message in messages:
