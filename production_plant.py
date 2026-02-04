@@ -1,16 +1,10 @@
 
 from enum import Enum
 from typing import TYPE_CHECKING
+from globals import GlobalStateEnum
 
 if TYPE_CHECKING:
     from sensors import Sensor
-
-
-class GlobalStateEnum(Enum):
-    NORMAL = 0
-    DEGRADED = 1
-    CRITICAL = 2
-    FAILURE = 3
 
 
 class ProductionPlant():

@@ -6,7 +6,7 @@ import globals
 import random
 from utils.colors import *
 import time
-from utils.timers import remove_timer
+from utils.timers import remove_timer, add_relative_timer
 
 class Simulator:
     instance: 'Simulator' = None
@@ -37,6 +37,12 @@ class Simulator:
         self.passed_time_in_DEGRADED = 0
         self.passed_time_in_CRITICAL = 0
         self.passed_time_in_FAILURE = 0
+        self.time_with_available_teams = 0
+        self.time_without_available_teams = 0
+        self.file = open("results.csv", "w")
+        self.file.write("time,state,measured_state,passed_time_in_NORMAL,passed_time_in_DEGRADED,passed_time_in_CRITICAL,passed_time_in_FAILURE,mean_reaction_time_degraded,mean_reaction_time_critical,total_maintenances,total_maintenance_time,unnecessary_maintenances,total_broker_messages,upkeep_broker_messages,necessary_upkeep_broker_messages,available_teams,time_with_available_teams,time_without_available_teams,correct_role_inference,incorrect_role_inference,correct_state_inference,incorrect_state_inference\n")
+        self.file.close()
+        self.file = open("results.csv", "a")
         
         self.initialize_sensors(globals.plant, globals.broker)
         
@@ -337,24 +343,50 @@ class Simulator:
                 remove_timer(id)
             else:
                 break
-            
+        
+    def save_data(self):
+        sensors_with_mean_reaction_time_degraded = list(filter(
+            lambda s: s.get_mean_reaction_time_degraded() != None, globals.plant.sensors.values()))
+        
+        mean_reaction_time_degraded = sum([sensor.get_mean_reaction_time_degraded() for sensor in sensors_with_mean_reaction_time_degraded]) / len(sensors_with_mean_reaction_time_degraded) if len(sensors_with_mean_reaction_time_degraded) > 0 else None
+        
+        sensors_with_mean_reaction_time_critical = list(filter(
+            lambda s: s.get_mean_reaction_time_critical() != None, globals.plant.sensors.values()))
+        
+        mean_reaction_time_critical = sum([sensor.get_mean_reaction_time_critical(
+        ) for sensor in sensors_with_mean_reaction_time_critical]) / len(sensors_with_mean_reaction_time_critical) if len(sensors_with_mean_reaction_time_critical) > 0 else None
+        total_maintenance_time = sum([sensor.get_total_maintenance_time() for sensor in globals.plant.sensors.values()])
+        total_broker_messages = globals.broker.do_nothing_count + globals.broker.upkeep_count
+        
+        self.file.write(f"{globals.time},{globals.plant.state.name}:{globals.plant.state.value},{globals.plant.measured_state},{self.passed_time_in_NORMAL},{self.passed_time_in_DEGRADED},{self.passed_time_in_CRITICAL},{self.passed_time_in_FAILURE},{mean_reaction_time_degraded},{mean_reaction_time_critical},{globals.actuator.total_maintenances},{total_maintenance_time},{globals.actuator.unnecessary_maintenances},{total_broker_messages},{globals.broker.upkeep_count},{globals.broker.necessary_upkeep_count},{globals.actuator.available_teams},{self.time_with_available_teams},{self.time_without_available_teams},{globals.actuator.correct_inferred_role},{total_broker_messages - globals.actuator.correct_inferred_role},{globals.actuator.correct_inferred_state},{total_broker_messages - globals.actuator.correct_inferred_state}\n")
+        
     def stop(self) -> None:
+        self.save_data()
         if globals.is_running:
             globals.should_stop = True
+            
+    def save_data_timer(self):
+        self.save_data()
+        self.file.flush()
+        
+        add_relative_timer(globals.SAVE_DATA_INTERVAL, self.save_data_timer)
             
     def run(self, steps: int = globals.DEFAULT_TIME_STEPS) -> None:
         if globals.is_running:
             return
         globals.is_running = True
+        self.save_data_timer()
         for _ in range(steps):  # Time steps
             if globals.should_stop: 
                 globals.is_running = False
                 globals.should_stop = False
                 break
+            
+            
             self.handle_timers()
             
             for sensor_id, sensor in globals.plant.sensors.items():
-                if (globals.time % 1000 == 0):
+                if (globals.time % globals.STEP_JUMP == 0):
                     # Update the state of the sensor only every second
                     # It turn the simulation faster
                     sensor.update_state_by_probabilities()
@@ -368,17 +400,32 @@ class Simulator:
 
                 globals.broker.publish(sensor_id, current_sensor_message)
 
-            if (globals.time % 1000 == 0):  # Simulation actuator action only for each minute
+            if (globals.time % globals.STEP_JUMP == 0):  # Simulation actuator action only for each minute
                 messages = globals.broker.flush()  # Broker has all messages collected by sensors in the last minute (the algorithm should be able to choose the messages to be saved in the queue)
                 # this will need to modulate the transition probabilities for the messages to matter
                 # to the environment
+                
                 globals.actuator.step(messages)
+            
+            if (globals.plant.state.name == 'NORMAL'):
+                self.passed_time_in_NORMAL += globals.STEP_JUMP
+            elif (globals.plant.state.name == 'DEGRADED'):
+                self.passed_time_in_DEGRADED += globals.STEP_JUMP
+            elif (globals.plant.state.name == 'CRITICAL'):
+                self.passed_time_in_CRITICAL += globals.STEP_JUMP
+            elif (globals.plant.state.name == 'FAILURE'):
+                self.passed_time_in_FAILURE += globals.STEP_JUMP
+            
+            if (globals.actuator.available_teams > 0):
+                self.time_with_available_teams += globals.STEP_JUMP
+            else:
+                self.time_without_available_teams += globals.STEP_JUMP
                 
-            self.advance_time(1000)  # 1 s
+            self.advance_time(globals.STEP_JUMP)  # 1 s
                 
-            # if (globals.time % 1000 == 0):
+            # if (globals.time % (globals.STEP_JUMP * 1000) == 0):
             #     last_pause_time = time.time()
-            #     time.sleep(1 - (time.time() - last_pause_time))
+            #     time.sleep(1 / 1000 * globals.STEP_JUMP - (time.time() - last_pause_time))
 
         globals.is_running = False
         

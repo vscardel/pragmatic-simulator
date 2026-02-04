@@ -3,7 +3,7 @@ from typing import List
 import random
 from production_plant import GlobalStateEnum
 from enum import Enum
-
+import globals
 
 class BrokerInstruction(Enum):
     DO_NOTHING = 0
@@ -17,13 +17,15 @@ class BrokerMessage:
         self.inferred_state = inferred_state
         self.sensor_message = sensor_message
         self.instruction = instruction
-        self.do_nothing_count = 0
-        self.upkeep_count = 0
+        
 
 
 class Broker:
     def __init__(self) -> None:
         self.buffer: List[BrokerMessage] = []
+        self.do_nothing_count = 0
+        self.upkeep_count = 0
+        self.necessary_upkeep_count = 0
         pass
 
     def publish(self, sensor_id: int, data: SensorMessage) -> bool:
@@ -41,9 +43,12 @@ class Broker:
         )
 
         if broker_message.instruction == BrokerInstruction.DO_NOTHING:
-            broker_message.do_nothing_count += 1
+            self.do_nothing_count += 1
         elif broker_message.instruction == BrokerInstruction.UPKEEP:
-            broker_message.upkeep_count += 1
+            self.upkeep_count += 1
+            sensor = globals.plant.get_sensor(sensor_id)
+            if (sensor.local_state != GlobalStateEnum.NORMAL and sensor.local_state != GlobalStateEnum.FAILURE):
+                self.necessary_upkeep_count += 1
 
         # TODO: add instruction not to be random
         self.buffer.append(broker_message)

@@ -55,7 +55,7 @@ type SensorData = {
     timestamp: number;
   } | null;
   old_state: SensorStateEnum | null;
-  under_maintenance: boolean;
+  under_maintenance: boolean | keyof typeof SensorStateEnum;
 };
 
 type ActuatorData = {

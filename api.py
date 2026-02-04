@@ -81,7 +81,7 @@ def read_sensors():
         "last_value": sensor.get_last_value(),
         "last_message": sensor.get_last_message(),
         "old_state": sensor.get_old_state(),
-        "under_maintenance": sensor.under_maintenance 
+        "under_maintenance": sensor.under_maintenance if type(sensor.under_maintenance) == bool else sensor.under_maintenance.name
     } for sensor in globals.plant.sensors.values()]
 
 @app.post("/start")

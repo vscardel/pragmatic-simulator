@@ -1,11 +1,12 @@
 import random
 from enum import Enum
-from typing import Literal
+from typing import Literal, Union
 from utils.prob_utils import prob_hour_to_prob_sec
 from typing import Any
 from utils.colors import *
 from production_plant import GlobalStateEnum
 import globals
+
 
 class SensorRoleEnum(Enum):
     CRITICAL = 0
@@ -45,10 +46,20 @@ class Sensor:
         self.sampling_interval = sampling_interval
         self.last_thousand_values: list[float] = []
         self.__initialize_transition_probabilities()
-        self.under_maintenance = False
+        self.under_maintenance: Union[Literal[False], GlobalStateEnum] = False
+        self.mean_reaction_time_degraded: float | None = None
+        self.degraded_maintenances = 0
+        self.mean_reaction_time_critical: float | None = None
+        self.critical_maintenances = 0
+        self.total_maintenance_time = 0
         
     def finish_maintenance(self):
+        if (self.under_maintenance == False): return
+        self.total_maintenance_time += globals.time - globals.TIME_TO_RECOVER[self.under_maintenance]
         self.under_maintenance = False
+
+    def get_total_maintenance_time(self):
+        return self.total_maintenance_time
 
     def __operating_range_is_ok(self):
         """
@@ -166,7 +177,7 @@ class Sensor:
                 self.auto_set_mean_value()
                 self.last_update_by_prob = (globals.time, self.old_state, self.local_state)
                 print(
-                    f"{MAGENTA}Time: {globals.time / 60000} minutes, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {self.old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
+                    f"{MAGENTA}Time: {globals.time } ms, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {self.old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
                 break
     
     def get_last_update_by_prob(self):
@@ -195,6 +206,21 @@ class Sensor:
         self.local_state = GlobalStateEnum.NORMAL
         self.auto_set_mean_value()
         self.last_upkeep = (globals.time, self.old_state, self.local_state)
+        if self.old_state == GlobalStateEnum.DEGRADED:
+            self.mean_reaction_time_degraded = ((self.mean_reaction_time_degraded if self.mean_reaction_time_degraded else 0) * self.degraded_maintenances + (globals.time - self.last_update_by_prob[0])) / (self.degraded_maintenances + 1)
+            self.degraded_maintenances += 1
+        if self.old_state == GlobalStateEnum.CRITICAL:
+            self.mean_reaction_time_critical = ((self.mean_reaction_time_critical if self.mean_reaction_time_critical else 0) * self.critical_maintenances + (globals.time - self.last_update_by_prob[0])) / (self.critical_maintenances + 1)
+            self.critical_maintenances += 1
+        if (self.old_state != GlobalStateEnum.NORMAL):
+            print(
+                f"{GREEN}Time: {globals.time} ms, Sensor {self.sensor_id}({self.get_true_role()}) upkeep from {self.old_state} and now has a mean value of {self.mean_value}{RESET}")
+            
+    def get_mean_reaction_time_degraded(self):
+        return self.mean_reaction_time_degraded
+        
+    def get_mean_reaction_time_critical(self):
+        return self.mean_reaction_time_critical
         
     def get_last_upkeep(self):
         if ('last_upkeep' in self.__dict__):
