@@ -38,11 +38,16 @@ def read_time():
 @app.get("/actuator")
 def read_actuator():
     return {
-        "last_messages_impact": globals.actuator.get_last_messages_impact(),
-        "last_sensors_to_analyze": globals.actuator.get_last_sensors_to_analyze(),
-        "last_sensors_sum_impact_ordered": globals.actuator.get_last_sensors_sum_impact_ordered(),
-        "available_teams": globals.actuator.get_available_teams(),
-        "MAX_ACTUATOR_TEAMS": globals.MAX_ACTUATOR_TEAMS
+        "last_messages_impact": globals.actuator.last_messages_impact,
+        "sensors_to_analyze": globals.actuator.sensors_to_analyze,
+        "sensors_sum_impact_ordered": globals.actuator.sensors_sum_impact_ordered,
+        "available_teams": globals.actuator.available_teams,
+        "MAX_ACTUATOR_TEAMS": globals.MAX_ACTUATOR_TEAMS,
+        "sensors_sum_impact": globals.actuator.sensors_sum_impact,
+        "unnecessary_maintenances": globals.actuator.unnecessary_maintenances,
+        "total_maintenances": globals.actuator.total_maintenances,
+        "correct_inferred_state": globals.actuator.correct_inferred_state,
+        "correct_inferred_role": globals.actuator.correct_inferred_role
     }
 
 
@@ -50,6 +55,9 @@ def read_actuator():
 def read_broker():
     return {
         "buffer": globals.broker.buffer,
+        "do_nothing_count": globals.broker.do_nothing_count,
+        "upkeep_count": globals.broker.upkeep_count,
+        "necessary_upkeep_count": globals.broker.necessary_upkeep_count
     }
 
 
@@ -75,12 +83,13 @@ def read_sensors():
         "local_state": sensor.local_state,
         "standard_deviation": sensor.standard_deviation,
         "transition_probabilities": sensor.transition_probabilities,
-        "last_update_by_prob": sensor.get_last_update_by_prob(),
-        "last_upkeep": sensor.get_last_upkeep(),
-        "last_thousand_values": sensor.get_last_thousand_values(),
-        "last_value": sensor.get_last_value(),
+        "last_update_by_prob": sensor.last_update_by_prob,
+        "last_upkeep": sensor.last_upkeep,
+        "last_thousand_values": sensor.last_thousand_values,
+        "last_value": sensor.last_value,
         "last_message": sensor.get_last_message(),
-        "old_state": sensor.get_old_state(),
+        "old_state": sensor.old_state,
+        "total_maintenance_time": sensor.total_maintenance_time,
         "under_maintenance": sensor.under_maintenance if type(sensor.under_maintenance) == bool else sensor.under_maintenance.name
     } for sensor in globals.plant.sensors.values()]
 

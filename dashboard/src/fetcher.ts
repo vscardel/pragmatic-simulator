@@ -1,4 +1,4 @@
-const REQUEST_LIMIT = 3;
+const REQUEST_LIMIT = 1;
 
 let fetcherRequests = 0;
 
@@ -18,7 +18,7 @@ function startFetching() {
         });
       fetcherRequests++;
     }
-  }, 16);
+  }, 500);
 }
 
 function stopFetching() {
