@@ -28,6 +28,10 @@ def read_all():
         "broker": read_broker(),
         "plant": read_plant(),
         "sensors": read_sensors(),
+        "mean_reaction_time_degraded": globals.mean_reaction_time_degraded,
+        "mean_reaction_time_critical": globals.mean_reaction_time_critical,
+        "degraded_maintenances": globals.degraded_maintenances,
+        "critical_maintenances": globals.critical_maintenances,
     }
 
 @app.get("/time")
