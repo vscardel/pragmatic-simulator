@@ -28,11 +28,17 @@ def read_all():
         "broker": read_broker(),
         "plant": read_plant(),
         "sensors": read_sensors(),
+        "simulator": read_simulator(),
         "mean_reaction_time_degraded": globals.mean_reaction_time_degraded,
         "mean_reaction_time_critical": globals.mean_reaction_time_critical,
         "degraded_maintenances": globals.degraded_maintenances,
         "critical_maintenances": globals.critical_maintenances,
+        "logs": globals.logs
     }
+    
+@app.delete("/remove-logs-until/{time}")
+def remove_logs_until(time: int):
+    globals.logs = [log for log in globals.logs if log[0] > time]
 
 @app.get("/time")
 def read_time():
@@ -51,9 +57,23 @@ def read_actuator():
         "unnecessary_maintenances": globals.actuator.unnecessary_maintenances,
         "total_maintenances": globals.actuator.total_maintenances,
         "correct_inferred_state": globals.actuator.correct_inferred_state,
-        "correct_inferred_role": globals.actuator.correct_inferred_role
+        "correct_inferred_role": globals.actuator.correct_inferred_role,
+        "total_maintenance_time": globals.total_maintenance_time
     }
 
+@app.get("/simulator")
+def read_simulator():
+    return {
+        "should_stop": globals.should_stop,
+        "is_running": globals.is_running,
+        "timers": len(globals.timers),
+        "passed_time_in_NORMAL": sim.passed_time_in_NORMAL,
+        "passed_time_in_DEGRADED": sim.passed_time_in_DEGRADED,
+        "passed_time_in_CRITICAL": sim.passed_time_in_CRITICAL,
+        "passed_time_in_FAILURE": sim.passed_time_in_FAILURE,
+        "time_with_available_teams": sim.time_with_available_teams,
+        "time_without_available_teams": sim.time_without_available_teams,
+    }
 
 @app.get("/broker")
 def read_broker():
@@ -69,7 +89,6 @@ def read_broker():
 def read_plant():
     return {
         "state": globals.plant.state,
-        "sensors": globals.plant.get_sensors(),
         "measured_state": globals.plant.measured_state
     }
 
@@ -91,11 +110,11 @@ def read_sensors():
         "last_upkeep": sensor.last_upkeep,
         "last_thousand_values": sensor.last_thousand_values,
         "last_value": sensor.last_value,
-        "last_message": sensor.get_last_message(),
+        "last_message": sensor.last_message.__dict__ if sensor.last_message else sensor.last_message,
         "old_state": sensor.old_state,
-        "total_maintenance_time": sensor.total_maintenance_time,
         "under_maintenance": sensor.under_maintenance if type(sensor.under_maintenance) == bool else sensor.under_maintenance.name
     } for sensor in globals.plant.sensors.values()]
+    
 
 @app.post("/start")
 def start(steps: int = globals.DEFAULT_TIME_STEPS):

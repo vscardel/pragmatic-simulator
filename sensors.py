@@ -53,11 +53,9 @@ class Sensor:
         self.last_thousand_values: list[float] = []
         self.__initialize_transition_probabilities()
         self.under_maintenance: Union[Literal[False], GlobalStateEnum] = False
-        self.total_maintenance_time = 0
         
     def finish_maintenance(self):
         if (self.under_maintenance == False): return
-        self.total_maintenance_time += globals.time - globals.TIME_TO_RECOVER[self.under_maintenance]
         self.under_maintenance = False
 
     def __operating_range_is_ok(self):
@@ -177,6 +175,7 @@ class Sensor:
                 self.last_update_by_prob = (globals.time, self.old_state, self.local_state)
                 print(
                     f"{MAGENTA}Time: {globals.time } ms, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {self.old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
+                globals.logs.append((globals.time, globals.LogType.UPDATE_BY_PROB, f"Sensor {self.sensor_id}({self.get_true_role().name}): {self.old_state.name} → {self.local_state.name}"))
                 break
     
 
@@ -204,6 +203,7 @@ class Sensor:
         if (self.old_state != GlobalStateEnum.NORMAL):
             print(
                 f"{GREEN}Time: {globals.time} ms, Sensor {self.sensor_id}({self.get_true_role()}) upkeep from {self.old_state} and now has a mean value of {self.mean_value}{RESET}")
+            globals.logs.append((globals.time, globals.LogType.UPKEEP, f"Sensor {self.sensor_id}({self.get_true_role().name}):{self.old_state.name} → {self.local_state.name}"))
             
         
     def get_true_role(self):

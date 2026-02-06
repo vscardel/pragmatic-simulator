@@ -7,6 +7,11 @@ class GlobalStateEnum(Enum):
     DEGRADED = 1
     CRITICAL = 2
     FAILURE = 3
+    
+class LogType(Enum):
+    UPDATE_BY_PROB = 0
+    UPKEEP = 1
+    
 
 if TYPE_CHECKING:
     from actuator import Actuator
@@ -29,6 +34,8 @@ mean_reaction_time_degraded: float | None = None
 mean_reaction_time_critical: float | None = None
 degraded_maintenances = 0
 critical_maintenances = 0
+total_maintenance_time = 0
+logs: list[tuple[int, LogType, str]] = []
 
 TIME_TO_RECOVER = {
     GlobalStateEnum.NORMAL: 10 * 60000,  # 5 minutes

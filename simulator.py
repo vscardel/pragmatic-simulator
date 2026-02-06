@@ -33,6 +33,12 @@ class Simulator:
         globals.last_sensor_id = 0
         globals.is_running = False
         globals.timers = []
+        globals.mean_reaction_time_degraded = 0
+        globals.mean_reaction_time_critical = 0
+        globals.degraded_maintenances = 0
+        globals.critical_maintenances = 0
+        globals.total_maintenance_time = 0
+        globals.logs = []
         self.passed_time_in_NORMAL = 0
         self.passed_time_in_DEGRADED = 0
         self.passed_time_in_CRITICAL = 0
@@ -345,11 +351,9 @@ class Simulator:
                 break
         
     def save_data(self):
-        
-        total_maintenance_time = sum([sensor.get_total_maintenance_time() for sensor in globals.plant.sensors.values()])
         total_broker_messages = globals.broker.do_nothing_count + globals.broker.upkeep_count
         
-        self.file.write(f"{globals.time},{globals.plant.state.name}:{globals.plant.state.value},{globals.plant.measured_state},{self.passed_time_in_NORMAL},{self.passed_time_in_DEGRADED},{self.passed_time_in_CRITICAL},{self.passed_time_in_FAILURE},{globals.mean_reaction_time_degraded},{globals.mean_reaction_time_critical},{globals.actuator.total_maintenances},{total_maintenance_time},{globals.actuator.unnecessary_maintenances},{total_broker_messages},{globals.broker.upkeep_count},{globals.broker.necessary_upkeep_count},{globals.actuator.available_teams},{self.time_with_available_teams},{self.time_without_available_teams},{globals.actuator.correct_inferred_role},{total_broker_messages - globals.actuator.correct_inferred_role},{globals.actuator.correct_inferred_state},{total_broker_messages - globals.actuator.correct_inferred_state}\n")
+        self.file.write(f"{globals.time},{globals.plant.state.name}:{globals.plant.state.value},{globals.plant.measured_state},{self.passed_time_in_NORMAL},{self.passed_time_in_DEGRADED},{self.passed_time_in_CRITICAL},{self.passed_time_in_FAILURE},{globals.mean_reaction_time_degraded},{globals.mean_reaction_time_critical},{globals.actuator.total_maintenances},{globals.total_maintenance_time},{globals.actuator.unnecessary_maintenances},{total_broker_messages},{globals.broker.upkeep_count},{globals.broker.necessary_upkeep_count},{globals.actuator.available_teams},{self.time_with_available_teams},{self.time_without_available_teams},{globals.actuator.correct_inferred_role},{total_broker_messages - globals.actuator.correct_inferred_role},{globals.actuator.correct_inferred_state},{total_broker_messages - globals.actuator.correct_inferred_state}\n")
         
     def stop(self) -> None:
         self.save_data()
@@ -411,6 +415,8 @@ class Simulator:
                 self.time_with_available_teams += globals.STEP_JUMP
             else:
                 self.time_without_available_teams += globals.STEP_JUMP
+                if (globals.actuator.available_teams < globals.MAX_ACTUATOR_TEAMS):
+                    globals.total_maintenance_time += globals.STEP_JUMP
                 
             self.advance_time(globals.STEP_JUMP)  # 1 s
                 
