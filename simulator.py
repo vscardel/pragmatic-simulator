@@ -102,7 +102,7 @@ class Simulator:
                 "critical": (10, 80),  # Perda total de propriedades lubrificantes
             },
             mean_value=48,
-            sampling_interval=1000 
+            sampling_interval=1500 
         )
 
         # 3. Sensor de Câmara Fria (Armazenamento de Matéria-Prima)
@@ -119,7 +119,7 @@ class Simulator:
                 "critical": (-15, 10),  # Produto comprometido
             },
             mean_value=-1,
-            sampling_interval=1000 
+            sampling_interval=5000 
         )
 
         # 4. Sensor de Ambiente (Escritório/Vestiário)
@@ -135,71 +135,71 @@ class Simulator:
                 "critical": (15, 32),  # Falha do ar condicionado
             },
             mean_value=23,
-            sampling_interval=1000  
+            sampling_interval=5000  
         )
 
 
         # Lista de configurações para 25 novas máquinas/ambientes
-        # Formato: (NomeDescritivo, (MinNorm, MaxNorm), (MinDeg, MaxDeg), (MinCrit, MaxCrit), ValorMedio)
+        # Formato: (NomeDescritivo, (MinNorm, MaxNorm), (MinDeg, MaxDeg), (MinCrit, MaxCrit), ValorMedio, IntervaloAmostragem)
         sensor_configs = [
             # --- Elétrica e Energia ---
             ("Trafo_Enrolamento_AT", (60, 95), (50, 105),
-            (40, 130), 80),   # Transformador Alta Tensão
+            (40, 130), 80, 200),   # Transformador Alta Tensão
             # Sala de Baterias (Crítico p/ vida útil)
-            ("Banco_Baterias_Nobreak", (20, 25), (15, 30), (10, 45), 23),
+            ("Banco_Baterias_Nobreak", (20, 25), (15, 30), (10, 45), 23,600),
             ("Gerador_Diesel_Exaustao", (400, 550),
-            (350, 600), (300, 700), 480),  # Gás de exaustão
+            (350, 600), (300, 700), 480, 2500),  # Gás de exaustão
             ("Inversor_Solar_IGBT", (40, 65), (30, 80),
-            (10, 95), 55),      # Dissipador de calor
+            (10, 95), 55, 1000),      # Dissipador de calor
             # Ponto de conexão elétrica (risco de arco)
-            ("Barramento_QGBT_Principal", (30, 50), (20, 70), (10, 90), 40),
+            ("Barramento_QGBT_Principal", (30, 50), (20, 70), (10, 90), 40, 1600),
 
             # --- Mecânica Pesada ---
-            ("Redutor_Turbina_Eolica", (50, 75), (40, 85), (20, 100), 65),  # Óleo do redutor
+            ("Redutor_Turbina_Eolica", (50, 75), (40, 85), (20, 100), 65, 10000),  # Óleo do redutor
             # Tambor de freio (pico intermitente)
-            ("Freio_Ponte_Rolante", (30, 150), (20, 200), (10, 300), 80),
+            ("Freio_Ponte_Rolante", (30, 150), (20, 200), (10, 300), 80, 10000),
             ("Cabecote_Compressor_Ar", (70, 90), (60, 105),
-            (40, 120), 82),  # Saída de ar comprimido
+            (40, 120), 82, 1200),  # Saída de ar comprimido
             ("Mancal_Ventilador_Exaustor", (35, 60),
-            (25, 75), (10, 90), 45),  # Vibração gera calor
+            (25, 75), (10, 90), 45, 7000),  # Vibração gera calor
             # Carcaça da bomba (cavitação aquece)
-            ("Bomba_Centrifuga_Housing", (30, 50), (20, 70), (10, 90), 40),
+            ("Bomba_Centrifuga_Housing", (30, 50), (20, 70), (10, 90), 40, 25000),
 
             # --- Processos Industriais (Plástico/Química) ---
             ("Extrusora_Zona_Alimentacao", (180, 200),
-            (160, 220), (140, 240), 190),  # Plástico derretido
+            (160, 220), (140, 240), 190, 1500),  # Plástico derretido
             ("Molde_Injecao_Refrigeracao", (40, 60), (30, 70),
-            (20, 90), 50),        # Água gelada no molde
+            (20, 90), 50, 800),        # Água gelada no molde
             ("Reator_Quimico_Exotermico", (120, 130),
-            (110, 140), (100, 160), 125),  # Reação perigosa
+            (110, 140), (100, 160), 125, 300),  # Reação perigosa
             ("Tanque_Fermentacao_Cerveja", (18, 22), (15, 25),
-            (10, 30), 20),        # Levedura sensível
+            (10, 30), 20, 8000),        # Levedura sensível
             ("Coluna_Destilacao_Topo", (78, 82), (75, 85),
-            (70, 95), 80),            # Separação de álcool
+            (70, 95), 80, 1300),            # Separação de álcool
 
             # --- Infraestrutura e TI ---
             ("Datacenter_Corredor_Frio", (18, 24), (15, 27),
-            (10, 32), 21),  # Entrada de ar nos servidores
+            (10, 32), 21, 500),  # Entrada de ar nos servidores
             ("Datacenter_Corredor_Quente", (25, 35),
-            (20, 40), (15, 50), 30),  # Saída de ar
+            (20, 40), (15, 50), 30, 500),  # Saída de ar
             ("Sala_UPS_Potencia", (20, 26), (18, 30),
-            (15, 40), 24),        # Equipamentos sensíveis
+            (15, 40), 24, 1600),        # Equipamentos sensíveis
             ("Torre_Resfriamento_Agua", (25, 32),
-            (20, 38), (15, 45), 29),  # Água industrial
+            (20, 38), (15, 45), 29, 5000),  # Água industrial
             # Controle de legionella/qualidade
-            ("Caixa_Dagua_Potavel", (15, 25), (10, 30), (5, 40), 22),
+            ("Caixa_Dagua_Potavel", (15, 25), (10, 30), (5, 40), 22, 30000),
 
             # --- Processos Térmicos Específicos ---
             ("Forno_Ceramica", (980, 1020), (950, 1050),
-            (900, 1200), 1000),  # Alta temperatura
+            (900, 1200), 1000, 1900),  # Alta temperatura
             ("Estufa_Secagem_Pintura", (150, 180),
-            (130, 200), (100, 250), 165),  # Cura de tinta
+            (130, 200), (100, 250), 165, 3600),  # Cura de tinta
             ("Tanque_Nitrogenio_Liq", (-196, -180),
-            (-200, -170), (-210, -150), -190),  # Criogenia
+            (-200, -170), (-210, -150), -190, 300),  # Criogenia
             ("Solda_Robo_Ponta", (250, 350), (200, 400),
-            (100, 500), 300),   # Processo intermitente
+            (100, 500), 300, 50),   # Processo intermitente
             ("Autoclave_Esterilizacao", (121, 134), (115, 140),
-            (100, 150), 127)  # Hospitalar/Laboratório
+            (100, 150), 127, 1000)  # Hospitalar/Laboratório
         ]
 
         # Lista onde os sensores serão armazenados
@@ -208,7 +208,7 @@ class Simulator:
         roles = [SensorRoleEnum.CRITICAL,
                 SensorRoleEnum.NORMAL, SensorRoleEnum.UNINPORTANT]
 
-        for name, range_norm, range_deg, range_crit, mean_val in sensor_configs:
+        for name, range_norm, range_deg, range_crit, mean_val, sampling_interval in sensor_configs:
             new_sensor = Sensor(
                 # Assumindo que este método existe no seu contexto
                 sensor_id=self.next_sensor_id(),
@@ -221,102 +221,102 @@ class Simulator:
                     "critical": range_crit,
                 },
                 mean_value=mean_val,
-                sampling_interval=1000
+                sampling_interval=sampling_interval
             )
 
 
             additional_sensors.append(new_sensor)
 
         # Lista de configurações para o Lote 2 (foco em críticos)
-        # Formato: (NomeDescritivo, (MinNorm, MaxNorm), (MinDeg, MaxDeg), (MinCrit, MaxCrit), ValorMedio, Role)
+        # Formato: (NomeDescritivo, (MinNorm, MaxNorm), (MinDeg, MaxDeg), (MinCrit, MaxCrit), ValorMedio, Role, IntervaloAmostragem)
         sensor_configs_critical_batch = [
             # --- CRÍTICOS (Aprox. 50% - Foco em Segurança e Parada Total) ---
             # 1. Caldeira de alta pressão: Risco de explosão iminente se superaquecer
             ("Caldeira_Vapor_Alta_Pressao", (240, 260),
-            (220, 280), (200, 300), 250, SensorRoleEnum.CRITICAL),
+            (220, 280), (200, 300), 250, SensorRoleEnum.CRITICAL, 1000),
 
             # 2. Reator Nuclear (Circuito Primário Simul.): Falha catastrófica
             ("Reator_Nuclear_Nucleo", (300, 320), (290, 335),
-            (280, 350), 310, SensorRoleEnum.CRITICAL),
+            (280, 350), 310, SensorRoleEnum.CRITICAL, 150),
 
             # 3. Bomba de Incêndio (Motor Diesel): Se falhar na emergência, a planta queima
             ("Motor_Bomba_Incendio", (85, 95), (80, 105),
-            (70, 120), 90, SensorRoleEnum.CRITICAL),
+            (70, 120), 90, SensorRoleEnum.CRITICAL, 3800),
 
             # 4. Tanque de Amônia (Refrigeração Industrial): Vazamento tóxico por pressão/temp
             ("Tanque_Armazenamento_Amonia", (-25, -15),
-            (-30, -10), (-40, 0), -20, SensorRoleEnum.CRITICAL),
+            (-30, -10), (-40, 0), -20, SensorRoleEnum.CRITICAL, 5000),
 
             # 5. Turbina a Gás (Eixo Principal): Desbalanceamento térmico quebra as palhetas
             ("Turbina_Gas_Eixo", (450, 500), (400, 550),
-            (350, 650), 480, SensorRoleEnum.CRITICAL),
+            (350, 650), 480, SensorRoleEnum.CRITICAL, 1500),
 
             # 6. Sala de Servidores (Mainframe Financeiro): Perda de dados = prejuízo milionário
             ("DataCenter_Mainframe_CPU", (40, 60), (30, 75),
-            (20, 90), 50, SensorRoleEnum.CRITICAL),
+            (20, 90), 50, SensorRoleEnum.CRITICAL, 2000),
 
             # 7. Forno de Siderurgia (Cúpula): Se esfriar, o metal solidifica e perde o forno
             ("Forno_Siderurgica_Gusa", (1400, 1500), (1350, 1550),
-            (1300, 1600), 1450, SensorRoleEnum.CRITICAL),
+            (1300, 1600), 1450, SensorRoleEnum.CRITICAL, 5000),
 
             # 8. Ventilação de Mina Subterrânea: Falha pode asfixiar trabalhadores
             ("Ventilador_Mina_Subterranea", (30, 50),
-            (20, 70), (10, 90), 40, SensorRoleEnum.CRITICAL),
+            (20, 70), (10, 90), 40, SensorRoleEnum.CRITICAL, 1000),
 
             # 9. Autoclave de Esterilização (Hospitalar/Lab): Risco biológico se falhar
             ("Autoclave_Bio_Seguranca", (121, 135), (115, 140),
-            (100, 150), 125, SensorRoleEnum.CRITICAL),
+            (100, 150), 125, SensorRoleEnum.CRITICAL, 10000),
 
             # 10. Sistema de Freio (Prensa Hidráulica 500T): Falha de segurança operacional
             ("Freio_Prensa_Hidraulica", (40, 70), (30, 90),
-            (20, 120), 55, SensorRoleEnum.CRITICAL),
+            (20, 120), 55, SensorRoleEnum.CRITICAL, 6000),
 
 
             # --- NORMAIS (Produção e Manutenção) ---
             # 11. Esteira de Embalagem: Parada gera gargalo, mas não perigo
             ("Motor_Esteira_Embalagem", (40, 60), (30, 75),
-            (20, 90), 50, SensorRoleEnum.NORMAL),
+            (20, 90), 50, SensorRoleEnum.NORMAL, 2400),
 
             # 12. Tanque de Água de Reuso: Usada para limpeza de pátio
-            ("Tanque_Agua_Reuso", (20, 30), (10, 40), (5, 50), 25, SensorRoleEnum.NORMAL),
+            ("Tanque_Agua_Reuso", (20, 30), (10, 40), (5, 50), 25, SensorRoleEnum.NORMAL, 5000),
 
             # 13. Misturador de Tinta Industrial: Afeta qualidade do lote
             ("Misturador_Tanque_Tinta", (35, 45), (30, 55),
-            (20, 70), 40, SensorRoleEnum.NORMAL),
+            (20, 70), 40, SensorRoleEnum.NORMAL, 3000),
 
             # 14. Compressor da Oficina de Manutenção: Ferramentas param
             ("Compressor_Ar_Oficina", (70, 85), (60, 95),
-            (50, 110), 78, SensorRoleEnum.NORMAL),
+            (50, 110), 78, SensorRoleEnum.NORMAL, 2000),
 
             # 15. Estufa de Secagem de Madeira: Controle de umidade/temp lento
             ("Estufa_Secagem_Madeira", (50, 70), (40, 80),
-            (30, 100), 60, SensorRoleEnum.NORMAL),
+            (30, 100), 60, SensorRoleEnum.NORMAL, 12000),
 
 
             # --- UNIMPORTANT (Conforto e Auxiliares) ---
             # 16. Ar Condicionado da Guarita: Conforto do porteiro
             ("AC_Guarita_Entrada", (22, 25), (20, 28),
-            (18, 35), 23, SensorRoleEnum.UNINPORTANT),
+            (18, 35), 23, SensorRoleEnum.UNINPORTANT, 20000),
 
             # 17. Bebedouro do Chão de Fábrica: Água gelada para funcionários
             ("Bebedouro_Fabrica_Agua", (8, 12), (5, 15),
-            (2, 20), 10, SensorRoleEnum.UNINPORTANT),
+            (2, 20), 10, SensorRoleEnum.UNINPORTANT, 1000),
 
             # 18. Aquecedor do Vestiário: Água do chuveiro
             ("Aquecedor_Boiler_Vestiario", (38, 45), (30, 50),
-            (20, 60), 42, SensorRoleEnum.UNINPORTANT),
+            (20, 60), 42, SensorRoleEnum.UNINPORTANT, 5000),
 
             # 19. Máquina de Café do Lounge: O café sai frio
             ("Maquina_Cafe_Caldeira", (90, 95), (85, 98),
-            (70, 105), 92, SensorRoleEnum.UNINPORTANT),
+            (70, 105), 92, SensorRoleEnum.UNINPORTANT, 6000),
 
             # 20. Driver de LED do Estacionamento: Iluminação externa
             ("Driver_LED_Poste", (30, 50), (20, 60),
-            (10, 80), 40, SensorRoleEnum.UNINPORTANT),
+            (10, 80), 40, SensorRoleEnum.UNINPORTANT, 500),
         ]
 
         random.shuffle(sensor_configs_critical_batch)
-        for name, range_norm, range_deg, range_crit, mean_val, role_def in sensor_configs_critical_batch:
+        for name, range_norm, range_deg, range_crit, mean_val, role_def, sampling_interval in sensor_configs_critical_batch:
             new_sensor = Sensor(
                 sensor_id=self.next_sensor_id(),
                 sensor_label=name,
@@ -328,7 +328,7 @@ class Simulator:
                     "critical": range_crit,
                 },
                 mean_value=mean_val,
-                sampling_interval=1000
+                sampling_interval=sampling_interval
             )
 
             additional_sensors.append(new_sensor)
