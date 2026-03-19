@@ -1,8 +1,8 @@
 import {useSimulationContext} from "@/contexts/SimulationContext";
 import {Table, TableBody, TableHead, TableHeader, TableRow} from "./ui/table";
-import Sensor from "./Sensor";
+import SensorInDash from "./SensorInDash";
 
-export default function Sensors() {
+export default function SensorsInDash() {
   const {data} = useSimulationContext();
 
   if (!data) return;
@@ -17,15 +17,13 @@ export default function Sensors() {
             <TableHead>interval</TableHead>
             <TableHead>label</TableHead>
             <TableHead>role</TableHead>
-            <TableHead>old_state</TableHead>
-            <TableHead>state</TableHead>
             <TableHead>sensor_data</TableHead>
-            <TableHead>under_maintenance</TableHead>
+            <TableHead>maintain</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.sensors.map((sensor) => (
-            <Sensor sensor={sensor} key={sensor.sensor_id} />
+            <SensorInDash sensor={sensor} key={sensor.sensor_id} />
           ))}
         </TableBody>
       </Table>

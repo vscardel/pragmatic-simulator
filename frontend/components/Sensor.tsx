@@ -7,6 +7,7 @@ export default function Sensor({sensor}: {sensor: SensorData}) {
   return (
     <TableRow>
       <TableCell>{sensor.sensor_id}</TableCell>
+      <TableCell>{sensor.sampling_interval}</TableCell>
       <TableCell>{sensor.sensor_label}</TableCell>
       <TableCell
         className={clsx(

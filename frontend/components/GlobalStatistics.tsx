@@ -26,7 +26,9 @@ export default function GlobalStatistics() {
             </TableCell>
             <TableCell itemType="string">
               {data.mean_reaction_time_degraded} (
-              {data.mean_reaction_time_degraded && formatMilliseconds(data.mean_reaction_time_degraded)})
+              {data.mean_reaction_time_degraded &&
+                formatMilliseconds(Math.max(0, data.mean_reaction_time_degraded))}
+              )
             </TableCell>
             <TableCell>
               {data.mean_reaction_time_critical} (

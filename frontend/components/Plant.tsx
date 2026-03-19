@@ -3,6 +3,8 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "./u
 import {StateBar} from "./StateBar";
 import {FourStateBar} from "./FourStateBar";
 import {formatMilliseconds} from "@/lib/utils";
+import PlantStateCell from "./PlantStateCell";
+import PlantMeasuredStateCell from "./PlantMeasuredStateCell";
 
 export default function Plant() {
   const {data} = useSimulationContext();
@@ -33,32 +35,8 @@ export default function Plant() {
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableCell
-              className={`text-white ${
-                data.plant.state === GlobalStateEnum.NORMAL
-                  ? "bg-green-500"
-                  : data.plant.state === GlobalStateEnum.DEGRADED
-                    ? "bg-yellow-400 text-black"
-                    : data.plant.state === GlobalStateEnum.CRITICAL
-                      ? "bg-red-500"
-                      : "bg-black"
-              }`}
-            >
-              {GlobalStateEnum[data.plant.state]}
-            </TableCell>
-            <TableCell
-              className={`text-white ${
-                data.plant.state === GlobalStateEnum.NORMAL
-                  ? "bg-green-500"
-                  : data.plant.state === GlobalStateEnum.DEGRADED
-                    ? "bg-yellow-400 text-black"
-                    : data.plant.state === GlobalStateEnum.CRITICAL
-                      ? "bg-red-500"
-                      : "bg-black"
-              }`}
-            >
-              {data.plant.measured_state}
-            </TableCell>
+            <PlantStateCell />
+            <PlantMeasuredStateCell />
             <TableCell>
               {data.simulator.passed_time_in_NORMAL} (
               {formatMilliseconds(data.simulator.passed_time_in_NORMAL)}) (

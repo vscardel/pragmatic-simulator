@@ -3,18 +3,7 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "./u
 import {MaintenanceBar} from "./MaintenanceBar";
 import {ProgressBar} from "./ProgressBar";
 import {DualStatusBar} from "./DualStatusBar";
-import {formatMilliseconds} from "@/lib/utils";
-
-function getAvailabilityColor(available: number, max: number) {
-  if (max === 0) return "hsl(0, 0%, 80%)";
-
-  const ratio = Math.min(Math.max(available / max, 0), 1);
-
-  // 0 = vermelho | 120 = verde
-  const hue = ratio * 120;
-
-  return `hsl(${hue}, 70%, 45%)`;
-}
+import {formatMilliseconds, getAvailabilityColor} from "@/lib/utils";
 
 export default function Actuator() {
   const {data} = useSimulationContext();

@@ -91,6 +91,8 @@ type BrokerData = {
   do_nothing_count: number;
   upkeep_count: number;
   necessary_upkeep_count: number;
+  q_table: Record<string, [number, number]>;
+  epsilon: number;
 };
 
 type ProductionPlantData = {
@@ -126,8 +128,15 @@ type AllData = {
 
 type SimulationContextType = {
   startSimulation: (steps?: number) => void;
+  startSimulationForHumans: (steps?: number) => void;
   stopSimulation: () => void;
   resetSimulation: () => void;
+  startTraining: (steps?: number) => void;
+  stopTraining: () => void;
+  saveQTable: (filename: string) => Promise<void>;
+  updateSensorsStates: () => void;
+  maintainSensor: (sensor_id: number) => Promise<Response>;
+  loadQTable: (filename: string) => Promise<void>;
   data: AllData | undefined;
   isFetching: boolean;
 };
@@ -151,9 +160,14 @@ export function SimulationProvider({children}: {children: ReactNode}) {
     setTimeout(() => startFetching(), FETCH_INTERVAL * 2);
   }
 
+  function startSimulationForHumans(steps?: number) {
+    fetch("http://localhost:8000/start-for-humans" + (steps ? `?steps=${steps}` : ""), {method: "POST"});
+    setTimeout(() => startFetching(FETCH_INTERVAL), FETCH_INTERVAL * 2);
+  }
+
   function stopSimulation() {
     fetch("http://localhost:8000/stop", {method: "POST"});
-    setTimeout(() => stopFetching(), FETCH_INTERVAL * 2);
+    // setTimeout(() => stopFetching(), FETCH_INTERVAL * 2);
   }
 
   async function resetSimulation() {
@@ -162,7 +176,11 @@ export function SimulationProvider({children}: {children: ReactNode}) {
     showedLogs = 0;
   }
 
-  function startFetching() {
+  function maintainSensor(sensor_id: number) {
+    return fetch(`http://localhost:8000/maintainance?sensor_id=${sensor_id}`, {method: "POST"});
+  }
+
+  function startFetching(fetchInterval: number = FETCH_INTERVAL) {
     if (fetchingInterval) {
       clearInterval(fetchingInterval);
     }
@@ -172,12 +190,12 @@ export function SimulationProvider({children}: {children: ReactNode}) {
           .then((res) => res.json())
           .then((data) => {
             setData(data);
-            showLogs(data.logs);
+            if (!data.is_training) showLogs(data.logs);
             fetcherRequests--;
           });
         fetcherRequests++;
       }
-    }, FETCH_INTERVAL);
+    }, fetchInterval);
     setIsFetching(true);
   }
 
@@ -204,14 +222,103 @@ export function SimulationProvider({children}: {children: ReactNode}) {
     setIsFetching(false);
   }
 
+  function startTraining(steps?: number) {
+    fetch("http://localhost:8000/train" + (steps ? `?steps=${steps}` : ""), {method: "POST"});
+    setTimeout(() => startFetching(), FETCH_INTERVAL * 2);
+  }
+
+  function stopTraining() {
+    fetch("http://localhost:8000/stop-training", {method: "POST"});
+    // setTimeout(() => stopFetching(), FETCH_INTERVAL * 2);
+  }
+
+  function updateSensorsStates() {
+    fetch("http://localhost:8000/update-sensors-states", {method: "POST"});
+  }
+
   function removeLogsUntil(time: number) {
     fetch(`http://localhost:8000/remove-logs-until/${time}`, {method: "DELETE"});
+  }
+
+  async function saveQTable(filename: string) {
+    if (!filename) {
+      toast("Informe um nome de arquivo para salvar a Q-table.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:8000/save_qtable?filename=${encodeURIComponent(filename)}`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast("Erro ao salvar Q-table.", {
+          description: body?.detail ?? `Status: ${res.status}`,
+        });
+        return;
+      }
+
+      const body = await res.json().catch(() => null);
+      toast("Q-table salva com sucesso.", {
+        description: body?.filename ? `Arquivo: ${body.filename}` : undefined,
+      });
+    } catch (error) {
+      toast("Erro ao salvar Q-table.", {
+        description: String(error),
+      });
+    }
+  }
+
+  async function loadQTable(filename: string) {
+    if (!filename) {
+      toast("Informe um nome de arquivo para carregar a Q-table.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:8000/load_qtable?filename=${encodeURIComponent(filename)}`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast("Erro ao carregar Q-table.", {
+          description: body?.detail ?? `Status: ${res.status}`,
+        });
+        return;
+      }
+
+      const body = await res.json().catch(() => null);
+      toast("Q-table carregada com sucesso.", {
+        description: body?.filename ? `Arquivo: ${body.filename}` : undefined,
+      });
+    } catch (error) {
+      toast("Erro ao carregar Q-table.", {
+        description: String(error),
+      });
+    }
   }
 
   useEffect(() => startFetching(), []);
 
   return (
-    <SimulationContext.Provider value={{data, isFetching, startSimulation, stopSimulation, resetSimulation}}>
+    <SimulationContext.Provider
+      value={{
+        data,
+        isFetching,
+        startTraining,
+        stopTraining,
+        startSimulation,
+        stopSimulation,
+        updateSensorsStates,
+        resetSimulation,
+        startSimulationForHumans,
+        maintainSensor,
+        saveQTable,
+        loadQTable,
+      }}
+    >
       {children}
     </SimulationContext.Provider>
   );
