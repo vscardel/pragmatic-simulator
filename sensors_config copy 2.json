@@ -1,0 +1,65 @@
+[
+  {
+    "label": "Caldeira",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        190,
+        240
+      ],
+      "degraded": [
+        160,
+        290
+      ],
+      "critical": [
+        150,
+        310
+      ]
+    },
+    "mean_value": 210,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Tanque_Oleo_Hidraulico",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        35,
+        55
+      ],
+      "degraded": [
+        25,
+        65
+      ],
+      "critical": [
+        10,
+        80
+      ]
+    },
+    "mean_value": 48,
+    "sampling_interval": 1500
+  },
+  {
+    "label": "Molde_Injecao_Refrigeracao",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        40,
+        60
+      ],
+      "degraded": [
+        30,
+        70
+      ],
+      "critical": [
+        20,
+        90
+      ]
+    },
+    "mean_value": 50,
+    "sampling_interval": 800
+  }
+]

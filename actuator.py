@@ -1,6 +1,6 @@
 from production_plant import GlobalStateEnum, ProductionPlant
 from sensors import SensorRoleEnum, Sensor
-from broker import BrokerMessage
+from broker import BrokerMessage, BrokerInstruction
 import random
 from utils.colors import *
 import globals
@@ -20,7 +20,7 @@ STATE_SEVERITY = {
 ROLE_WEIGHT = {
     SensorRoleEnum.CRITICAL: 0.7,
     SensorRoleEnum.NORMAL: 0.3,
-    SensorRoleEnum.UNINPORTANT: 0.0,
+    SensorRoleEnum.UNINPORTANT: 0.01,
 }
 
 
@@ -58,7 +58,7 @@ class Actuator:
         measured_state = sumTop / sumWeight
         normalized_state = measured_state / 0.75
         self.production_plant.set_measured_state(measured_state)
-        self.production_plant.set_state(GlobalStateEnum(math.floor(normalized_state)))
+        self.production_plant.set_state(GlobalStateEnum(min(3, max(0,math.floor(normalized_state)))))
 
 
     def compute_messages_impact(self, messages: list[BrokerMessage]) -> dict[int, float]:
@@ -72,12 +72,12 @@ class Actuator:
 
         for message in messages:
             sensor_id = message.sensor_id
-            inferred_role = message.inferred_role
-            inferred_state = message.inferred_state
+            role = globals.plant.get_sensor(message.sensor_id).get_true_role()
+            state = globals.plant.get_sensor(message.sensor_id).local_state
             # Impact is calculated with the inferred role and the inferred state
             if (sensor_id not in messages_impact.keys()):
                 messages_impact[sensor_id] = 0
-            messages_impact[sensor_id] += ROLE_WEIGHT[SensorRoleEnum(inferred_role)] * STATE_SEVERITY[GlobalStateEnum(inferred_state)]
+            messages_impact[sensor_id] += ROLE_WEIGHT[role] * STATE_SEVERITY[state]
 
         self.last_messages_impact = messages_impact
         return messages_impact
@@ -102,15 +102,15 @@ class Actuator:
         self.upkeep_sensors([sensor_id for sensor_id, _ in self.sensors_to_analyze])
                 
     def upkeep_sensors(self, sensors: list[int]):
-        for sensor_id in sensors:
+        for sensor_id in sensors[:self.available_teams]:
             sensor = self.production_plant.get_sensor(sensor_id)
             if (sensor.local_state == GlobalStateEnum.FAILURE):
                 continue
             
             
             sensor.under_maintenance = sensor.local_state
-            add_relative_timer(TIME_TO_RECOVER[sensor.local_state], self.make_team_available)
-            add_relative_timer(TIME_TO_RECOVER[sensor.local_state], sensor.finish_maintenance)
+            add_relative_timer(TIME_TO_RECOVER[sensor.local_state] / (1 if not globals.is_training else 1000), self.make_team_available)
+            add_relative_timer(TIME_TO_RECOVER[sensor.local_state] / (1 if not globals.is_training else 1000), sensor.finish_maintenance)
 
             self.available_teams -= 1
             self.total_maintenances += 1
@@ -129,9 +129,12 @@ class Actuator:
             if (message.inferred_role == sensor.get_true_role().value):
                 self.correct_inferred_role += 1
                 
-            
+    def message(self, message: BrokerMessage):
+        if (message.instruction == BrokerInstruction.UPKEEP):
+            self.upkeep_sensors([message.sensor_id])
+            self.update_global_state()
 
     def step(self, messages: list[BrokerMessage]):
-        self.compute_correct_inferred_state_and_role(messages)
+        # self.compute_correct_inferred_state_and_role(messages)
         self.update_sensors_states(messages)
         self.update_global_state()

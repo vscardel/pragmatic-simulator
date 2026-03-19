@@ -1,5 +1,5 @@
 import math
-
+import globals
 
 
 def prob_hour_to_prob_ms(p_hour: float):
@@ -39,3 +39,16 @@ def prob_hour_to_prob_min(p_hour: float):
     float: Probability per minute.
     """
     return 1-math.pow(1-p_hour, 1/60)
+
+
+def prob_hour_to_prob_training_interval(p_hour: float):
+    """
+    Converts a probability to something happening in a hour to a probability of the same thing happening in a training interval.
+    
+    Parameters:
+    p_hour (float): Probability per hour.
+    
+    Returns:
+    float: Probability per training interval.
+    """
+    return 1-math.pow(1-p_hour, 1/((3600 * 1000)/globals.UPDATE_STATE_INTERVAL_IN_TRAINING))

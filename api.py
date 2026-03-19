@@ -1,8 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import globals
 from simulator import Simulator
 import threading
+import json
+import ast
 
 app = FastAPI()
 
@@ -24,6 +26,7 @@ sim = Simulator.get_instance()
 def read_all():
     return {
         "time": globals.time,
+        "is_training": globals.is_training,
         "actuator": read_actuator(),
         "broker": read_broker(),
         "plant": read_plant(),
@@ -81,9 +84,84 @@ def read_broker():
         "buffer": globals.broker.buffer,
         "do_nothing_count": globals.broker.do_nothing_count,
         "upkeep_count": globals.broker.upkeep_count,
-        "necessary_upkeep_count": globals.broker.necessary_upkeep_count
+        "necessary_upkeep_count": globals.broker.necessary_upkeep_count,
+        "q_table": export_q_table_to_json(globals.q_table),
+        "epsilon": globals.broker.epsilon
     }
 
+
+def export_q_table_to_json(q_table):
+    # 1. Converte o defaultdict para um dicionário normal e as chaves (tuplas) para strings
+    # O resultado será algo como: {"(1, 4, 0)": [12.5, -3.2], "(2, 8, 1)": [-1.0, 45.8]}
+    q_table_serializavel = {
+        str(estado): valores_q
+        for estado, valores_q in q_table.items()
+    }
+
+    # 2. Converte para a string JSON (que pode ser retornada na sua API/Response)
+    payload_json = json.dumps(q_table_serializavel)
+
+    return q_table_serializavel
+
+
+@app.post("/save_qtable")
+def save_qtable(filename: str):
+    """
+    Salva o estado atual da q_table em um arquivo JSON.
+
+    Parâmetros:
+        filename: nome do arquivo (query param). Se não terminar com .json, será adicionado.
+    """
+    if not filename.endswith(".json"):
+        filename = f"{filename}.json"
+
+    q_table_json = export_q_table_to_json(globals.q_table)
+
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(q_table_json, f, ensure_ascii=False, indent=2)
+
+    return {
+        "status": "ok",
+        "message": "Q-table salva com sucesso.",
+        "filename": filename,
+        "states": len(q_table_json),
+    }
+
+
+@app.post("/load_qtable")
+def load_qtable(filename: str):
+    """
+    Carrega uma q_table de um arquivo JSON e substitui a q_table atual em globals.
+
+    Parâmetros:
+        filename: nome do arquivo (query param). Se não terminar com .json, será adicionado.
+    """
+    if not filename.endswith(".json"):
+        filename = f"{filename}.json"
+
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Arquivo '{filename}' não encontrado.")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail=f"Arquivo '{filename}' não é um JSON válido.")
+
+    # Limpa a q_table atual e popula com os dados do arquivo
+    globals.q_table.clear()
+    for state_str, actions in data.items():
+        try:
+            state_tuple = ast.literal_eval(state_str)
+        except (SyntaxError, ValueError):
+            continue
+        globals.q_table[state_tuple] = actions
+
+    return {
+        "status": "ok",
+        "message": "Q-table carregada com sucesso.",
+        "filename": filename,
+        "states": len(globals.q_table),
+    }
 
 @app.get("/plant")
 def read_plant():
@@ -119,7 +197,10 @@ def read_sensors():
 @app.post("/start")
 def start(steps: int = globals.DEFAULT_TIME_STEPS):
     threading.Thread(target=sim.run,args=(steps,), daemon=True).start()
-
+    
+@app.post("/train")
+def train(steps: int = globals.DEFAULT_TIME_STEPS):
+    threading.Thread(target=sim.train,args=(steps,), daemon=True).start()
 
 @app.post("/reset")
 def reset():
@@ -127,6 +208,23 @@ def reset():
     sim.reset()
     
 
+@app.post("/update-sensors-states")
+def update_sensors_states():
+    sim.update_all_sensors_state_by_probabilities()
+    
+
 @app.post("/stop")
 def stop():
     sim.stop()
+
+@app.post("/stop-training")
+def stop_training():
+    sim.stop_training()
+    
+@app.post("/start-for-humans")
+def start_for_humans(steps: int = globals.DEFAULT_TIME_STEPS):
+    threading.Thread(target=sim.run_for_humans,args=(steps,), daemon=True).start()    
+
+@app.post('/maintainance')
+def maintainance(sensor_id: int):
+    globals.plant.get_sensor(sensor_id).should_maintain = True

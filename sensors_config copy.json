@@ -1,0 +1,1052 @@
+[
+  {
+    "label": "Caldeira",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        190,
+        240
+      ],
+      "degraded": [
+        160,
+        290
+      ],
+      "critical": [
+        150,
+        310
+      ]
+    },
+    "mean_value": 210,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Mancal_Motor_Eletrico",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        40,
+        75
+      ],
+      "degraded": [
+        30,
+        90
+      ],
+      "critical": [
+        20,
+        110
+      ]
+    },
+    "mean_value": 65,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Tanque_Oleo_Hidraulico",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        35,
+        55
+      ],
+      "degraded": [
+        25,
+        65
+      ],
+      "critical": [
+        10,
+        80
+      ]
+    },
+    "mean_value": 48,
+    "sampling_interval": 1500
+  },
+  {
+    "label": "Camara_Fria",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        -5,
+        2
+      ],
+      "degraded": [
+        -8,
+        5
+      ],
+      "critical": [
+        -15,
+        10
+      ]
+    },
+    "mean_value": -1,
+    "sampling_interval": 5000
+  },
+  {
+    "label": "Ambiente",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        21,
+        24
+      ],
+      "degraded": [
+        19,
+        27
+      ],
+      "critical": [
+        15,
+        32
+      ]
+    },
+    "mean_value": 23,
+    "sampling_interval": 5000
+  },
+  {
+    "label": "Trafo_Enrolamento_AT",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        60,
+        95
+      ],
+      "degraded": [
+        50,
+        105
+      ],
+      "critical": [
+        40,
+        130
+      ]
+    },
+    "mean_value": 80,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Banco_Baterias_Nobreak",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        20,
+        25
+      ],
+      "degraded": [
+        15,
+        30
+      ],
+      "critical": [
+        10,
+        45
+      ]
+    },
+    "mean_value": 23,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Gerador_Diesel_Exaustao",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        400,
+        550
+      ],
+      "degraded": [
+        350,
+        600
+      ],
+      "critical": [
+        300,
+        700
+      ]
+    },
+    "mean_value": 480,
+    "sampling_interval": 2500
+  },
+  {
+    "label": "Inversor_Solar_IGBT",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        40,
+        65
+      ],
+      "degraded": [
+        30,
+        80
+      ],
+      "critical": [
+        10,
+        95
+      ]
+    },
+    "mean_value": 55,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Barramento_QGBT_Principal",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        30,
+        50
+      ],
+      "degraded": [
+        20,
+        70
+      ],
+      "critical": [
+        10,
+        90
+      ]
+    },
+    "mean_value": 40,
+    "sampling_interval": 1600
+  },
+  {
+    "label": "Redutor_Turbina_Eolica",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        50,
+        75
+      ],
+      "degraded": [
+        40,
+        85
+      ],
+      "critical": [
+        20,
+        100
+      ]
+    },
+    "mean_value": 65,
+    "sampling_interval": 10000
+  },
+  {
+    "label": "Freio_Ponte_Rolante",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        30,
+        150
+      ],
+      "degraded": [
+        20,
+        200
+      ],
+      "critical": [
+        10,
+        300
+      ]
+    },
+    "mean_value": 80,
+    "sampling_interval": 10000
+  },
+  {
+    "label": "Cabecote_Compressor_Ar",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        70,
+        90
+      ],
+      "degraded": [
+        60,
+        105
+      ],
+      "critical": [
+        40,
+        120
+      ]
+    },
+    "mean_value": 82,
+    "sampling_interval": 1200
+  },
+  {
+    "label": "Mancal_Ventilador_Exaustor",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        35,
+        60
+      ],
+      "degraded": [
+        25,
+        75
+      ],
+      "critical": [
+        10,
+        90
+      ]
+    },
+    "mean_value": 45,
+    "sampling_interval": 7000
+  },
+  {
+    "label": "Bomba_Centrifuga_Housing",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        30,
+        50
+      ],
+      "degraded": [
+        20,
+        70
+      ],
+      "critical": [
+        10,
+        90
+      ]
+    },
+    "mean_value": 40,
+    "sampling_interval": 25000
+  },
+  {
+    "label": "Extrusora_Zona_Alimentacao",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        180,
+        200
+      ],
+      "degraded": [
+        160,
+        220
+      ],
+      "critical": [
+        140,
+        240
+      ]
+    },
+    "mean_value": 190,
+    "sampling_interval": 1500
+  },
+  {
+    "label": "Molde_Injecao_Refrigeracao",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        40,
+        60
+      ],
+      "degraded": [
+        30,
+        70
+      ],
+      "critical": [
+        20,
+        90
+      ]
+    },
+    "mean_value": 50,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Reator_Quimico_Exotermico",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        120,
+        130
+      ],
+      "degraded": [
+        110,
+        140
+      ],
+      "critical": [
+        100,
+        160
+      ]
+    },
+    "mean_value": 125,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Tanque_Fermentacao_Cerveja",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        18,
+        22
+      ],
+      "degraded": [
+        15,
+        25
+      ],
+      "critical": [
+        10,
+        30
+      ]
+    },
+    "mean_value": 20,
+    "sampling_interval": 8000
+  },
+  {
+    "label": "Coluna_Destilacao_Topo",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        78,
+        82
+      ],
+      "degraded": [
+        75,
+        85
+      ],
+      "critical": [
+        70,
+        95
+      ]
+    },
+    "mean_value": 80,
+    "sampling_interval": 1300
+  },
+  {
+    "label": "Datacenter_Corredor_Frio",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        18,
+        24
+      ],
+      "degraded": [
+        15,
+        27
+      ],
+      "critical": [
+        10,
+        32
+      ]
+    },
+    "mean_value": 21,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Datacenter_Corredor_Quente",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        25,
+        35
+      ],
+      "degraded": [
+        20,
+        40
+      ],
+      "critical": [
+        15,
+        50
+      ]
+    },
+    "mean_value": 30,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Sala_UPS_Potencia",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        20,
+        26
+      ],
+      "degraded": [
+        18,
+        30
+      ],
+      "critical": [
+        15,
+        40
+      ]
+    },
+    "mean_value": 24,
+    "sampling_interval": 1600
+  },
+  {
+    "label": "Torre_Resfriamento_Agua",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        25,
+        32
+      ],
+      "degraded": [
+        20,
+        38
+      ],
+      "critical": [
+        15,
+        45
+      ]
+    },
+    "mean_value": 29,
+    "sampling_interval": 5000
+  },
+  {
+    "label": "Caixa_Dagua_Potavel",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        15,
+        25
+      ],
+      "degraded": [
+        10,
+        30
+      ],
+      "critical": [
+        5,
+        40
+      ]
+    },
+    "mean_value": 22,
+    "sampling_interval": 30000
+  },
+  {
+    "label": "Forno_Ceramica",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        980,
+        1020
+      ],
+      "degraded": [
+        950,
+        1050
+      ],
+      "critical": [
+        900,
+        1200
+      ]
+    },
+    "mean_value": 1000,
+    "sampling_interval": 1900
+  },
+  {
+    "label": "Estufa_Secagem_Pintura",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        150,
+        180
+      ],
+      "degraded": [
+        130,
+        200
+      ],
+      "critical": [
+        100,
+        250
+      ]
+    },
+    "mean_value": 165,
+    "sampling_interval": 3600
+  },
+  {
+    "label": "Tanque_Nitrogenio_Liq",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        -196,
+        -180
+      ],
+      "degraded": [
+        -200,
+        -170
+      ],
+      "critical": [
+        -210,
+        -150
+      ]
+    },
+    "mean_value": -190,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Solda_Robo_Ponta",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        250,
+        350
+      ],
+      "degraded": [
+        200,
+        400
+      ],
+      "critical": [
+        100,
+        500
+      ]
+    },
+    "mean_value": 300,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Autoclave_Esterilizacao",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        121,
+        134
+      ],
+      "degraded": [
+        115,
+        140
+      ],
+      "critical": [
+        100,
+        150
+      ]
+    },
+    "mean_value": 127,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Caldeira_Vapor_Alta_Pressao",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        240,
+        260
+      ],
+      "degraded": [
+        220,
+        280
+      ],
+      "critical": [
+        200,
+        300
+      ]
+    },
+    "mean_value": 250,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Reator_Nuclear_Nucleo",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        300,
+        320
+      ],
+      "degraded": [
+        290,
+        335
+      ],
+      "critical": [
+        280,
+        350
+      ]
+    },
+    "mean_value": 310,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Motor_Bomba_Incendio",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        85,
+        95
+      ],
+      "degraded": [
+        80,
+        105
+      ],
+      "critical": [
+        70,
+        120
+      ]
+    },
+    "mean_value": 90,
+    "sampling_interval": 3800
+  },
+  {
+    "label": "Tanque_Armazenamento_Amonia",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        -25,
+        -15
+      ],
+      "degraded": [
+        -30,
+        -10
+      ],
+      "critical": [
+        -40,
+        0
+      ]
+    },
+    "mean_value": -20,
+    "sampling_interval": 5000
+  },
+  {
+    "label": "Turbina_Gas_Eixo",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        450,
+        500
+      ],
+      "degraded": [
+        400,
+        550
+      ],
+      "critical": [
+        350,
+        650
+      ]
+    },
+    "mean_value": 480,
+    "sampling_interval": 1500
+  },
+  {
+    "label": "DataCenter_Mainframe_CPU",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        40,
+        60
+      ],
+      "degraded": [
+        30,
+        75
+      ],
+      "critical": [
+        20,
+        90
+      ]
+    },
+    "mean_value": 50,
+    "sampling_interval": 2000
+  },
+  {
+    "label": "Forno_Siderurgica_Gusa",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        1400,
+        1500
+      ],
+      "degraded": [
+        1350,
+        1550
+      ],
+      "critical": [
+        1300,
+        1600
+      ]
+    },
+    "mean_value": 1450,
+    "sampling_interval": 5000
+  },
+  {
+    "label": "Ventilador_Mina_Subterranea",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        30,
+        50
+      ],
+      "degraded": [
+        20,
+        70
+      ],
+      "critical": [
+        10,
+        90
+      ]
+    },
+    "mean_value": 40,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Autoclave_Bio_Seguranca",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        121,
+        135
+      ],
+      "degraded": [
+        115,
+        140
+      ],
+      "critical": [
+        100,
+        150
+      ]
+    },
+    "mean_value": 125,
+    "sampling_interval": 10000
+  },
+  {
+    "label": "Freio_Prensa_Hidraulica",
+    "type": "TEMPERATURE",
+    "role": "CRITICAL",
+    "operating_range": {
+      "normal": [
+        40,
+        70
+      ],
+      "degraded": [
+        30,
+        90
+      ],
+      "critical": [
+        20,
+        120
+      ]
+    },
+    "mean_value": 55,
+    "sampling_interval": 6000
+  },
+  {
+    "label": "Motor_Esteira_Embalagem",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        40,
+        60
+      ],
+      "degraded": [
+        30,
+        75
+      ],
+      "critical": [
+        20,
+        90
+      ]
+    },
+    "mean_value": 50,
+    "sampling_interval": 2400
+  },
+  {
+    "label": "Tanque_Agua_Reuso",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        20,
+        30
+      ],
+      "degraded": [
+        10,
+        40
+      ],
+      "critical": [
+        5,
+        50
+      ]
+    },
+    "mean_value": 25,
+    "sampling_interval": 5000
+  },
+  {
+    "label": "Misturador_Tanque_Tinta",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        35,
+        45
+      ],
+      "degraded": [
+        30,
+        55
+      ],
+      "critical": [
+        20,
+        70
+      ]
+    },
+    "mean_value": 40,
+    "sampling_interval": 3000
+  },
+  {
+    "label": "Compressor_Ar_Oficina",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        70,
+        85
+      ],
+      "degraded": [
+        60,
+        95
+      ],
+      "critical": [
+        50,
+        110
+      ]
+    },
+    "mean_value": 78,
+    "sampling_interval": 2000
+  },
+  {
+    "label": "Estufa_Secagem_Madeira",
+    "type": "TEMPERATURE",
+    "role": "NORMAL",
+    "operating_range": {
+      "normal": [
+        50,
+        70
+      ],
+      "degraded": [
+        40,
+        80
+      ],
+      "critical": [
+        30,
+        100
+      ]
+    },
+    "mean_value": 60,
+    "sampling_interval": 12000
+  },
+  {
+    "label": "AC_Guarita_Entrada",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        22,
+        25
+      ],
+      "degraded": [
+        20,
+        28
+      ],
+      "critical": [
+        18,
+        35
+      ]
+    },
+    "mean_value": 23,
+    "sampling_interval": 20000
+  },
+  {
+    "label": "Bebedouro_Fabrica_Agua",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        8,
+        12
+      ],
+      "degraded": [
+        5,
+        15
+      ],
+      "critical": [
+        2,
+        20
+      ]
+    },
+    "mean_value": 10,
+    "sampling_interval": 1000
+  },
+  {
+    "label": "Aquecedor_Boiler_Vestiario",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        38,
+        45
+      ],
+      "degraded": [
+        30,
+        50
+      ],
+      "critical": [
+        20,
+        60
+      ]
+    },
+    "mean_value": 42,
+    "sampling_interval": 5000
+  },
+  {
+    "label": "Maquina_Cafe_Caldeira",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        90,
+        95
+      ],
+      "degraded": [
+        85,
+        98
+      ],
+      "critical": [
+        70,
+        105
+      ]
+    },
+    "mean_value": 92,
+    "sampling_interval": 6000
+  },
+  {
+    "label": "Driver_LED_Poste",
+    "type": "TEMPERATURE",
+    "role": "UNINPORTANT",
+    "operating_range": {
+      "normal": [
+        30,
+        50
+      ],
+      "degraded": [
+        20,
+        60
+      ],
+      "critical": [
+        10,
+        80
+      ]
+    },
+    "mean_value": 40,
+    "sampling_interval": 1000
+  }
+]
