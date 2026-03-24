@@ -22,7 +22,7 @@ def format_hours_minutes(hours_float):
     m = int((hours_float - h) * 60)
     return f"{h}h {m}min"
 
-# Funções auxiliares para os rótulos agora recebem o 'ax' como argumento
+# Funções auxiliares recebendo o eixo 'ax' para evitar problemas de escopo
 
 
 def autolabel_minutes(bars, ax):
@@ -57,21 +57,25 @@ def plot_comparisons(file_human, file_qlearning):
     df_human = pd.read_csv(file_human)
     df_ql = pd.read_csv(file_qlearning)
 
-    # Pegando os valores da última linha (necessário para os gráficos 2 e 3)
+    # Pegando os valores da última linha
     last_human = df_human.iloc[-1]
     last_ql = df_ql.iloc[-1]
 
-    # Cores solicitadas e configurações gerais
+    # Cores solicitadas
     color_human = 'blue'
     color_ql = 'red'
     label_human = 'Humano'
     label_ql = 'QLearning'
     width = 0.35
 
+    # Preparar a figura com 4 subplots (2 linhas x 2 colunas)
+    fig, axs = plt.subplots(2, 2, figsize=(16, 12))
+    plt.subplots_adjust(hspace=0.4, wspace=0.3)
+
     # =========================================================================
     # GRÁFICO 1: Linha - measured_state vs time (em horas)
     # =========================================================================
-    fig1, ax1 = plt.subplots(figsize=(10, 6))
+    ax1 = axs[0, 0]
     ax1.plot(ms_to_hours(df_human['time']), df_human['measured_state'],
              color=color_human, label=label_human, alpha=0.8)
     ax1.plot(ms_to_hours(df_ql['time']), df_ql['measured_state'],
@@ -82,13 +86,10 @@ def plot_comparisons(file_human, file_qlearning):
     ax1.legend()
     ax1.grid(True, linestyle='--', alpha=0.6)
 
-    fig1.tight_layout()
-    fig1.savefig("grafico_1_estado_medido.png", dpi=300)
-
     # =========================================================================
     # GRÁFICO 2: Barras - Mean Reaction Time (Degraded e Critical) da ÚLTIMA LINHA
     # =========================================================================
-    fig2, ax2 = plt.subplots(figsize=(10, 6))
+    ax2 = axs[0, 1]
 
     categories_2 = ['Estado Degradado', 'Estado Crítico']
 
@@ -115,13 +116,10 @@ def plot_comparisons(file_human, file_qlearning):
     autolabel_minutes(bars_human_2, ax2)
     autolabel_minutes(bars_ql_2, ax2)
 
-    fig2.tight_layout()
-    fig2.savefig("grafico_2_tempo_reacao.png", dpi=300)
-
     # =========================================================================
     # GRÁFICO 3: Barras - Seções Diversas (Manutenção e Equipes)
     # =========================================================================
-    fig3, ax3 = plt.subplots(figsize=(10, 6))
+    ax3 = axs[1, 0]
 
     # Cálculos Humano
     human_maint_time_h = ms_to_hours(last_human['total_maintenance_time'])
@@ -159,13 +157,10 @@ def plot_comparisons(file_human, file_qlearning):
     # Oculta eixo Y do gráfico 3 para focar nos labels
     ax3.set_yticks([])
 
-    fig3.tight_layout()
-    fig3.savefig("grafico_3_metricas_manutencao.png", dpi=300)
-
     # =========================================================================
     # GRÁFICO 4: Linha - available_teams vs time (em horas)
     # =========================================================================
-    fig4, ax4 = plt.subplots(figsize=(10, 6))
+    ax4 = axs[1, 1]
     ax4.plot(ms_to_hours(df_human['time']), df_human['available_teams'],
              color=color_human, label=label_human, alpha=0.8)
     ax4.plot(ms_to_hours(df_ql['time']), df_ql['available_teams'],
@@ -180,15 +175,14 @@ def plot_comparisons(file_human, file_qlearning):
     ax4.legend()
     ax4.grid(True, linestyle='--', alpha=0.6)
 
-    fig4.tight_layout()
-    fig4.savefig("grafico_4_equipes_disponiveis.png", dpi=300)
-
-    # Mostrar todos os gráficos na tela (abrirá 4 janelas diferentes)
-    print("Gráficos salvos com sucesso em arquivos separados.")
+    # Salvar e mostrar
+    plt.tight_layout()
+    plt.savefig("graficos_comparativos.png", dpi=300)
+    print("Gráficos salvos com sucesso em 'graficos_comparativos.png'.")
     plt.show()
 
 
 # --- Exemplo de uso ---
 if __name__ == "__main__":
     plot_comparisons("results-human-9h-4teams-time5x.csv",
-                     "results-qlearning-11h-4teams-time_max.csv")
+                     "results-qlearning.csv")
