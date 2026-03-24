@@ -11,7 +11,6 @@ export default function PlantInDash() {
 
   return (
     <div>
-      <h3>Plant</h3>
       <Table>
         <TableHeader>
           <TableRow>

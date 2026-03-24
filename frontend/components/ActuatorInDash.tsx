@@ -10,7 +10,6 @@ export default function ActuatorInDash() {
 
   return (
     <div>
-      <h3>Actuator</h3>
       <Table>
         <TableHeader>
           <TableRow>

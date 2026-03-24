@@ -15,19 +15,21 @@ export default function Dash() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex min-h-screen w-full flex-col items-center gap-4 py-8 px-8 bg-white dark:bg-black sm:items-start">
-        <ButtonGroup>
-          <Button onClick={() => startSimulationForHumans(Number.MAX_SAFE_INTEGER)}>
-            Start indefinitely
-          </Button>
-          <Button onClick={stopSimulation}>Stop</Button>
-          <Button disabled />
-          <Button onClick={() => updateSensorsStates()}>Update sensors states</Button>
-          <Button disabled />
-          <Button onClick={resetSimulation}>Reset</Button>
-        </ButtonGroup>
-        Time: {data?.time || 0} ({formatMilliseconds(data?.time || 0)})
-        <PlantInDash />
-        <ActuatorInDash />
+        <div className="flex items-center gap-4">
+          <ButtonGroup>
+            <Button onClick={() => startSimulationForHumans(Number.MAX_SAFE_INTEGER)}>
+              Start indefinitely
+            </Button>
+            <Button onClick={stopSimulation}>Stop</Button>
+            <Button disabled />
+            <Button onClick={() => updateSensorsStates()}>Update sensors states</Button>
+            <Button disabled />
+            <Button onClick={resetSimulation}>Reset</Button>
+          </ButtonGroup>
+          Time: {data?.time || 0} ({formatMilliseconds(data?.time || 0)})
+          <PlantInDash />
+          <ActuatorInDash />
+        </div>
         <SensorsInDash />
       </main>
     </div>
