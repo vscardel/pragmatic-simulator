@@ -129,7 +129,10 @@ class Broker:
         globals.q_table[state][action_idx] = old_value + \
             self.alpha * (target - old_value)
 
-        if (not globals.is_training): self.epsilon = 0.0000001 # max(0.01, self.epsilon * 0.999999)
+        # if (not globals.is_training):
+        #     self.epsilon = 0.0000001  # max(0.000001, self.epsilon * 0.999999)
+        if (reward > 0):
+            self.epsilon = max(0.000001, self.epsilon * 0.9999999)
         
 
         return True

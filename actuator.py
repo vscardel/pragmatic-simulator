@@ -109,8 +109,10 @@ class Actuator:
             
             
             sensor.under_maintenance = sensor.local_state
-            add_relative_timer(TIME_TO_RECOVER[sensor.local_state] / (1 if not globals.is_training else 1000), self.make_team_available)
-            add_relative_timer(TIME_TO_RECOVER[sensor.local_state] / (1 if not globals.is_training else 1000), sensor.finish_maintenance)
+            # add_relative_timer(TIME_TO_RECOVER[sensor.local_state] / (1 if not globals.is_training else 1000), self.make_team_available)
+            # add_relative_timer(TIME_TO_RECOVER[sensor.local_state] / (1 if not globals.is_training else 1000), sensor.finish_maintenance)
+            add_relative_timer(TIME_TO_RECOVER[sensor.local_state], self.make_team_available)
+            add_relative_timer(TIME_TO_RECOVER[sensor.local_state], sensor.finish_maintenance)
 
             self.available_teams -= 1
             self.total_maintenances += 1

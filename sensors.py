@@ -102,95 +102,107 @@ class Sensor:
         print(f'Sensor {self.sensor_id} initializing transition probabilities...')
         self.original_transition_probabilities = { # Values when the machine is normal
             GlobalStateEnum.NORMAL: {
-                GlobalStateEnum.DEGRADED: prob_hour_to_prob_sec(0.05) if not is_training else prob_hour_to_prob_training_interval(0.15),  # 1% per hour
-                GlobalStateEnum.CRITICAL: 0 if not is_training else prob_hour_to_prob_training_interval(0.15),
-                GlobalStateEnum.FAILURE: 0 if not is_training else prob_hour_to_prob_training_interval(0.15),
+                GlobalStateEnum.DEGRADED: prob_hour_to_prob_sec(0.05), # if not is_training else prob_hour_to_prob_training_interval(0.15),  # 1% per hour
+                GlobalStateEnum.CRITICAL: 0, # if not is_training else prob_hour_to_prob_training_interval(0.15),
+                GlobalStateEnum.FAILURE: 0, # if not is_training else prob_hour_to_prob_training_interval(0.15),
             },
             GlobalStateEnum.DEGRADED: {
-                GlobalStateEnum.CRITICAL: prob_hour_to_prob_sec(0.15) if not is_training else prob_hour_to_prob_training_interval(0.15), # 3% per hour
-                GlobalStateEnum.NORMAL:  prob_hour_to_prob_sec(0.01) if not is_training else prob_hour_to_prob_training_interval(0.15), # 1% per hour
-                GlobalStateEnum.FAILURE: 0 if not is_training else prob_hour_to_prob_training_interval(0.15),
+                GlobalStateEnum.CRITICAL: prob_hour_to_prob_sec(0.15), # if not is_training else prob_hour_to_prob_training_interval(0.15), # 3% per hour
+                GlobalStateEnum.NORMAL:  prob_hour_to_prob_sec(0.01), # if not is_training else prob_hour_to_prob_training_interval(0.15), # 1% per hour
+                GlobalStateEnum.FAILURE: 0, # if not is_training else prob_hour_to_prob_training_interval(0.15),
             },
             GlobalStateEnum.CRITICAL: {
                 # 7% per hour
-                GlobalStateEnum.FAILURE: prob_hour_to_prob_sec(0.21) if not is_training else prob_hour_to_prob_training_interval(0.15),
-                GlobalStateEnum.DEGRADED: prob_hour_to_prob_sec(0.005) if not is_training else prob_hour_to_prob_training_interval(0.15), # 0.5% per hour
-                GlobalStateEnum.NORMAL: 0 if not is_training else prob_hour_to_prob_training_interval(0.15),
+                GlobalStateEnum.FAILURE: prob_hour_to_prob_sec(0.21), # if not is_training else prob_hour_to_prob_training_interval(0.15),
+                GlobalStateEnum.DEGRADED: prob_hour_to_prob_sec(0.005), # if not is_training else prob_hour_to_prob_training_interval(0.15), # 0.5% per hour
+                GlobalStateEnum.NORMAL: 0, # if not is_training else prob_hour_to_prob_training_interval(0.15),
             },
             GlobalStateEnum.FAILURE: {
-                GlobalStateEnum.CRITICAL: 0 if not is_training else prob_hour_to_prob_training_interval(0.15),
-                GlobalStateEnum.DEGRADED: 0 if not is_training else prob_hour_to_prob_training_interval(0.15),
-                GlobalStateEnum.NORMAL: 0 if not is_training else prob_hour_to_prob_training_interval(0.15),
+                GlobalStateEnum.CRITICAL: 0, # if not is_training else prob_hour_to_prob_training_interval(0.15),
+                GlobalStateEnum.DEGRADED: 0, # if not is_training else prob_hour_to_prob_training_interval(0.15),
+                GlobalStateEnum.NORMAL: 0, # if not is_training else prob_hour_to_prob_training_interval(0.15),
             }
         }
         self.transition_probabilities = self.original_transition_probabilities
       
-    def auto_set_mean_value(self):
-        # Calculate the size of the ranges
-        normal_range = self.operating_range['normal'][1] - self.operating_range['normal'][0]
-        degraded_range = self.operating_range['degraded'][1] - self.operating_range['degraded'][0]
-        critical_range = self.operating_range['critical'][1] - self.operating_range['critical'][0]
-        
-        if (not globals.is_training): 
-            if self.local_state == GlobalStateEnum.NORMAL:
-                # Change mean value to a random value inside the normal range
-                self.mean_value = random.uniform(self.operating_range['normal'][0], self.operating_range['normal'][1])
-            elif self.local_state == GlobalStateEnum.DEGRADED:
-                if self.old_state == GlobalStateEnum.NORMAL:
-                    # Change mean value to a random value inside the degraded range but outside the normal range
-                    self.mean_value = random.uniform(self.operating_range['degraded'][0], self.operating_range['degraded'][1] - normal_range)
-                    if self.mean_value >= self.operating_range['normal'][0] and self.mean_value <= self.operating_range['normal'][1]:
-                        self.mean_value += normal_range
-                else:
-                    critical_to_left = self.mean_value < self.operating_range['normal'][0]
-                    if (critical_to_left):
-                        # Change mean value to the left of the normal range
-                        self.mean_value = random.uniform(self.operating_range['degraded'][0], self.operating_range['normal'][0])
-                    else:
-                        # Change mean value to the right of the normal range
-                        self.mean_value = random.uniform(self.operating_range['normal'][1], self.operating_range['degraded'][1])
-            elif self.local_state == GlobalStateEnum.CRITICAL:
-                # Verify if the mean value is more to the left or to the right of the degraded range
-                degraded_to_left = self.mean_value < self.operating_range['normal'][0]
-                if (degraded_to_left):
-                    # Change mean value to the left of the degraded range
-                    self.mean_value = random.uniform(self.operating_range['critical'][0], self.operating_range['degraded'][0])
-                else:
-                    # Change mean value to the right of the degraded range
-                    self.mean_value = random.uniform(self.operating_range['degraded'][1], self.operating_range['critical'][1])
-            elif self.local_state == GlobalStateEnum.FAILURE:
-                # Verify if the mean value is more to the left or to the right of the critical range
+    def auto_set_mean_value_for_non_training(self):
+        normal_range = self.operating_range['normal'][1] - \
+            self.operating_range['normal'][0]
+            
+        if self.local_state == GlobalStateEnum.NORMAL:
+            # Change mean value to a random value inside the normal range
+            self.mean_value = random.uniform(
+                self.operating_range['normal'][0], self.operating_range['normal'][1])
+        elif self.local_state == GlobalStateEnum.DEGRADED:
+            if self.old_state == GlobalStateEnum.NORMAL:
+                # Change mean value to a random value inside the degraded range but outside the normal range
+                self.mean_value = random.uniform(self.operating_range['degraded'][0], self.operating_range['degraded'][1] - normal_range)
+                if self.mean_value >= self.operating_range['normal'][0] and self.mean_value <= self.operating_range['normal'][1]:
+                    self.mean_value += normal_range
+            else:
                 critical_to_left = self.mean_value < self.operating_range['normal'][0]
                 if (critical_to_left):
-                    # Change mean value to the left of the critical range using a mirrored to left normal distribution with the mean value on the border of the critical range
-                    self.mean_value = random.normalvariate(self.operating_range['critical'][0], self.standard_deviation)
-                    if self.mean_value >= self.operating_range['critical'][0]:
-                        self.mean_value = self.operating_range['critical'][0] + (self.operating_range['critical'][0] - self.mean_value)
+                    # Change mean value to the left of the normal range
+                    self.mean_value = random.uniform(self.operating_range['degraded'][0], self.operating_range['normal'][0])
                 else:
-                    # Change mean value to the right of the critical range using a mirrored to right normal distribution with the mean value on the border of the critical range
-                    self.mean_value = random.normalvariate(self.operating_range['critical'][1], self.standard_deviation)
-                    if self.mean_value <= self.operating_range['critical'][1]:
-                        self.mean_value = self.operating_range['critical'][1] - (self.mean_value - self.operating_range['critical'][1])
-
-        else:
-            if self.local_state == GlobalStateEnum.NORMAL:
-                self.mean_value = random.uniform(
-                    self.operating_range['normal'][0], self.operating_range['normal'][1])
-            elif self.local_state == GlobalStateEnum.DEGRADED:
-                self.mean_value = random.uniform(
-                    self.operating_range['degraded'][0], self.operating_range['degraded'][1] - normal_range)
-                if self.mean_value >= self.operating_range['normal'][0]:
-                    self.mean_value += normal_range
-            elif self.local_state == GlobalStateEnum.CRITICAL:
-                self.mean_value = random.uniform(
-                    self.operating_range['critical'][0], self.operating_range['critical'][1] - degraded_range)
-                if self.mean_value >= self.operating_range['degraded'][0]:
-                    self.mean_value += degraded_range
-            elif self.local_state == GlobalStateEnum.FAILURE:
-                self.mean_value = random.uniform(
-                    self.operating_range['critical'][0], self.operating_range['critical'][1] - critical_range)
+                    # Change mean value to the right of the normal range
+                    self.mean_value = random.uniform(self.operating_range['normal'][1], self.operating_range['degraded'][1])
+        elif self.local_state == GlobalStateEnum.CRITICAL:
+            # Verify if the mean value is more to the left or to the right of the degraded range
+            degraded_to_left = self.mean_value < self.operating_range['normal'][0]
+            if (degraded_to_left):
+                # Change mean value to the left of the degraded range
+                self.mean_value = random.uniform(self.operating_range['critical'][0], self.operating_range['degraded'][0])
+            else:
+                # Change mean value to the right of the degraded range
+                self.mean_value = random.uniform(self.operating_range['degraded'][1], self.operating_range['critical'][1])
+        elif self.local_state == GlobalStateEnum.FAILURE:
+            # Verify if the mean value is more to the left or to the right of the critical range
+            critical_to_left = self.mean_value < self.operating_range['normal'][0]
+            if (critical_to_left):
+                # Change mean value to the left of the critical range using a mirrored to left normal distribution with the mean value on the border of the critical range
+                self.mean_value = random.normalvariate(self.operating_range['critical'][0], self.standard_deviation)
                 if self.mean_value >= self.operating_range['critical'][0]:
-                    self.mean_value += critical_range
+                    self.mean_value = self.operating_range['critical'][0] + (self.operating_range['critical'][0] - self.mean_value)
+            else:
+                # Change mean value to the right of the critical range using a mirrored to right normal distribution with the mean value on the border of the critical range
+                self.mean_value = random.normalvariate(self.operating_range['critical'][1], self.standard_deviation)
+                if self.mean_value <= self.operating_range['critical'][1]:
+                    self.mean_value = self.operating_range['critical'][1] - (self.mean_value - self.operating_range['critical'][1])
+      
+    def auto_set_mean_value(self):
+        
+        
+        if (not globals.is_training): 
+            self.auto_set_mean_value_for_non_training()
+        else:
+            self.auto_set_mean_value_for_non_training()
+            # # Calculate the size of the ranges
+            # normal_range = self.operating_range['normal'][1] - \
+            #     self.operating_range['normal'][0]
+            # degraded_range = self.operating_range['degraded'][1] - \
+            #     self.operating_range['degraded'][0]
+            # critical_range = self.operating_range['critical'][1] - \
+            #     self.operating_range['critical'][0]
+                
+            # if self.local_state == GlobalStateEnum.NORMAL:
+            #     self.mean_value = random.uniform(
+            #         self.operating_range['normal'][0], self.operating_range['normal'][1])
+            # elif self.local_state == GlobalStateEnum.DEGRADED:
+            #     self.mean_value = random.uniform(
+            #         self.operating_range['degraded'][0], self.operating_range['degraded'][1] - normal_range)
+            #     if self.mean_value >= self.operating_range['normal'][0]:
+            #         self.mean_value += normal_range
+            # elif self.local_state == GlobalStateEnum.CRITICAL:
+            #     self.mean_value = random.uniform(
+            #         self.operating_range['critical'][0], self.operating_range['critical'][1] - degraded_range)
+            #     if self.mean_value >= self.operating_range['degraded'][0]:
+            #         self.mean_value += degraded_range
+            # elif self.local_state == GlobalStateEnum.FAILURE:
+            #     self.mean_value = random.uniform(
+            #         self.operating_range['critical'][0], self.operating_range['critical'][1] - critical_range)
+            #     if self.mean_value >= self.operating_range['critical'][0]:
+            #         self.mean_value += critical_range
             
         
     def update_state_by_probabilities(self):
@@ -229,7 +241,8 @@ class Sensor:
             prob_sum += probability
             
         if globals.is_training:
-            self.auto_set_mean_value()
+            pass
+            #self.auto_set_mean_value()
     
 
     def upkeep(self):
