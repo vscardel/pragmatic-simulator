@@ -185,4 +185,4 @@ def plot_comparisons(file_human, file_qlearning):
 # --- Exemplo de uso ---
 if __name__ == "__main__":
     plot_comparisons("results-human-9h-4teams-time5x.csv",
-                     "results-qlearning.csv")
+                     "results-qlearning-v5.csv")
