@@ -6,6 +6,7 @@ from typing import Any
 from utils.colors import *
 from production_plant import GlobalStateEnum
 import globals
+from utils.timers import add_relative_timer
 
 
 class SensorRoleEnum(Enum):
@@ -233,10 +234,14 @@ class Sensor:
                 self.auto_set_mean_value()
                 self.last_update_by_prob = (globals.time, self.old_state, self.local_state)
                 
-                if (not globals.is_training): 
-                    print(
-                    f"{MAGENTA}Time: {globals.time } ms, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {self.old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
-                    globals.logs.append((globals.time, globals.LogType.UPDATE_BY_PROB, f"Sensor {self.sensor_id}({self.get_true_role().name}): {self.old_state.name} → {self.local_state.name}"))
+                if (globals.is_training and self.local_state == GlobalStateEnum.FAILURE):
+                    add_relative_timer(1000 * 60 * 60 * 5, self.upkeep) # When goes to Failure, go back to NORMAL in 5 hours (only in training environment)
+                # if (not globals.is_training): 
+                #     print(
+                #     f"{MAGENTA}Time: {globals.time } ms, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {self.old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
+                #     globals.logs.append((globals.time, globals.LogType.UPDATE_BY_PROB, f"Sensor {self.sensor_id}({self.get_true_role().name}): {self.old_state.name} → {self.local_state.name}"))
+                print(f"{MAGENTA}Time: {globals.time } ms, Sensor {self.sensor_id}({self.get_true_role()}) updated state from {self.old_state} to {self.local_state} and now has a mean value of {self.mean_value}{RESET}")
+                globals.logs.append((globals.time, globals.LogType.UPDATE_BY_PROB, f"Sensor {self.sensor_id}({self.get_true_role().name}): {self.old_state.name} → {self.local_state.name}"))
                 break
             prob_sum += probability
             
@@ -267,11 +272,14 @@ class Sensor:
             globals.mean_reaction_time_critical = ((globals.mean_reaction_time_critical if globals.mean_reaction_time_critical else 0) * globals.critical_maintenances + (globals.time - self.last_update_by_prob[0])) / (globals.critical_maintenances + 1)
             globals.critical_maintenances += 1
         if (self.old_state != GlobalStateEnum.NORMAL):
-            if (not globals.is_training):
-                print(
-                    f"{GREEN}Time: {globals.time} ms, Sensor {self.sensor_id}({self.get_true_role()}) upkeep from {self.old_state} and now has a mean value of {self.mean_value}{RESET}")
-                globals.logs.append((globals.time, globals.LogType.UPKEEP, f"Sensor {self.sensor_id}({self.get_true_role().name}):{self.old_state.name} → {self.local_state.name}"))
-            
+            # if (not globals.is_training):
+            #     print(
+            #         f"{GREEN}Time: {globals.time} ms, Sensor {self.sensor_id}({self.get_true_role()}) upkeep from {self.old_state} and now has a mean value of {self.mean_value}{RESET}")
+            #     globals.logs.append((globals.time, globals.LogType.UPKEEP, f"Sensor {self.sensor_id}({self.get_true_role().name}):{self.old_state.name} → {self.local_state.name}"))
+            print(
+                f"{GREEN}Time: {globals.time} ms, Sensor {self.sensor_id}({self.get_true_role()}) upkeep from {self.old_state} and now has a mean value of {self.mean_value}{RESET}")
+            globals.logs.append((globals.time, globals.LogType.UPKEEP,
+                                f"Sensor {self.sensor_id}({self.get_true_role().name}):{self.old_state.name} → {self.local_state.name}"))
         
     def get_true_role(self):
         return self.role

@@ -35,7 +35,7 @@ DEFAULT_TIME_STEPS = 24 * 60 * 60  # 24 hours
 MAX_ACTUATOR_TEAMS = 4
 STEP_JUMP = 1000
 UPDATE_STATE_INTERVAL_IN_TRAINING = 1000 * 60 * 2 # 2 minutes
-SAVE_DATA_INTERVAL = 60 * 1000  # 1 minute
+SAVE_DATA_INTERVAL = 60 * 1000 # 1 hour
 timers: list[tuple[int, uuid.UUID, Callable]] = []
 mean_reaction_time_degraded: float | None = None
 mean_reaction_time_critical: float | None = None
@@ -43,7 +43,12 @@ degraded_maintenances = 0
 critical_maintenances = 0
 total_maintenance_time = 0
 logs: list[tuple[int, LogType, str]] = []
-q_table = defaultdict(lambda: [0.0, 0.0])
+q_table = defaultdict(lambda: [0.0, 0.01])
+total_reward = 0
+total_positive_reward = 0
+total_positive_reward_qty = 0
+total_non_positive_reward = 0
+total_non_positive_reward_qty = 0
 
 # with open("qtable.json", "r") as f:
 #     data = json.load(f)

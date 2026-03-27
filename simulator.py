@@ -46,20 +46,21 @@ class Simulator:
         self.time_with_available_teams = 0
         self.time_without_available_teams = 0
         self.file = open("results.csv", "w")
-        self.file.write("time,state,measured_state,passed_time_in_NORMAL,passed_time_in_DEGRADED,passed_time_in_CRITICAL,passed_time_in_FAILURE,mean_reaction_time_degraded,mean_reaction_time_critical,total_maintenances,total_maintenance_time,unnecessary_maintenances,total_broker_messages,upkeep_broker_messages,necessary_upkeep_broker_messages,available_teams,time_with_available_teams,time_without_available_teams,correct_role_inference,incorrect_role_inference,correct_state_inference,incorrect_state_inference\n")
+        self.file.write("time,state,measured_state,passed_time_in_NORMAL,passed_time_in_DEGRADED,passed_time_in_CRITICAL,passed_time_in_FAILURE,mean_reaction_time_degraded,mean_reaction_time_critical,total_maintenances,total_maintenance_time,unnecessary_maintenances,degraded_maintenances,critical_maintenances,total_broker_messages,upkeep_broker_messages,necessary_upkeep_broker_messages,available_teams,time_with_available_teams,time_without_available_teams,qlearning_epsilon,total_reward,total_positive_reward,total_positive_reward_qty,total_non_positive_reward,total_non_positive_reward_qty,qtable_size\n")
         self.file.close()
         self.file = open("results.csv", "a")
+        self.file_buffer = ""
 
         globals.last_sensor_id = 0
         globals.plant.sensors = {}
-        self.initialize_sensors(globals.plant, globals.broker)
+        self.initialize_sensors(globals.plant)
 
     def reset(self) -> None:
         globals.should_stop = False
         globals.plant = ProductionPlant()
         globals.actuator = Actuator(globals.plant)
         globals.broker = Broker()
-        globals.q_table = defaultdict(lambda: [0.0, 0.0])
+        globals.q_table = defaultdict(lambda: [0.0, 0.01])
         
         self.short_reset()
         
@@ -67,7 +68,7 @@ class Simulator:
     def advance_time(self, steps: int = 1) -> None:
         globals.time += steps
 
-    def initialize_sensors(self, plant: 'ProductionPlant', broker: 'Broker') -> None:
+    def initialize_sensors(self, plant: 'ProductionPlant') -> None:
         with open("sensors_config.json", "r", encoding="utf-8") as f:
             sensors_config = json.load(f)
 
@@ -110,13 +111,19 @@ class Simulator:
             else:
                 break
 
-    def save_data(self):
+    def save_data(self, force_flush = False):
         total_broker_messages = globals.broker.do_nothing_count + globals.broker.upkeep_count
 
-        self.file.write(f"{globals.time},{globals.plant.state.name}:{globals.plant.state.value},{globals.plant.measured_state},{self.passed_time_in_NORMAL},{self.passed_time_in_DEGRADED},{self.passed_time_in_CRITICAL},{self.passed_time_in_FAILURE},{globals.mean_reaction_time_degraded},{globals.mean_reaction_time_critical},{globals.actuator.total_maintenances},{globals.total_maintenance_time},{globals.actuator.unnecessary_maintenances},{total_broker_messages},{globals.broker.upkeep_count},{globals.broker.necessary_upkeep_count},{globals.actuator.available_teams},{self.time_with_available_teams},{self.time_without_available_teams},{globals.actuator.correct_inferred_role},{total_broker_messages - globals.actuator.correct_inferred_role},{globals.actuator.correct_inferred_state},{total_broker_messages - globals.actuator.correct_inferred_state}\n")
+        self.file_buffer += f"{globals.time},{globals.plant.state.name}:{globals.plant.state.value},{globals.plant.measured_state},{self.passed_time_in_NORMAL},{self.passed_time_in_DEGRADED},{self.passed_time_in_CRITICAL},{self.passed_time_in_FAILURE},{globals.mean_reaction_time_degraded},{globals.mean_reaction_time_critical},{globals.actuator.total_maintenances},{globals.total_maintenance_time},{globals.actuator.unnecessary_maintenances},{globals.degraded_maintenances},{globals.critical_maintenances},{total_broker_messages},{globals.broker.upkeep_count},{globals.broker.necessary_upkeep_count},{globals.actuator.available_teams},{self.time_with_available_teams},{self.time_without_available_teams},{globals.broker.epsilon},{globals.total_reward},{globals.total_positive_reward},{globals.total_positive_reward_qty},{globals.total_non_positive_reward},{globals.total_non_positive_reward_qty},{len(globals.q_table)}\n"
+
+        if len(self.file_buffer.split("\n")) >= 10 or force_flush:
+            self.file.write(self.file_buffer)
+            self.file.flush()
+            self.file_buffer = ""
+
 
     def stop(self) -> None:
-        self.save_data()
+        self.save_data(force_flush=True)
         if globals.is_running:
             globals.should_stop = True
 
@@ -137,7 +144,7 @@ class Simulator:
 
     def save_data_timer(self):
         self.save_data()
-        self.file.flush()
+        
 
         add_relative_timer(globals.SAVE_DATA_INTERVAL, self.save_data_timer)
 
@@ -168,8 +175,8 @@ class Simulator:
             sensors = list(globals.plant.sensors.items())
             random.shuffle(sensors)
             for sensor_id, sensor in  sensors:
-                if ((globals.time % globals.STEP_JUMP == 0 and not is_training) or 
-                    (is_training and globals.time % globals.UPDATE_STATE_INTERVAL_IN_TRAINING == 0)
+                if ((globals.time % globals.STEP_JUMP == 0) 
+                    #(is_training and globals.time % globals.UPDATE_STATE_INTERVAL_IN_TRAINING == 0)
                     ):
                     # Update the state of the sensor only every second
                     # It turn the simulation faster

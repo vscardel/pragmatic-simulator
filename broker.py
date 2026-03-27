@@ -97,9 +97,10 @@ class Broker:
                 action_idx = 0
         else:    
             if random.uniform(0, 1) < self.epsilon:
-                action_idx = random.choice([0, 1]) if globals.actuator.available_teams > 0 else 0
+                action_idx = random.choice([0, 1])
             else:
-                action_idx = globals.q_table[state].index(max(globals.q_table[state])) if globals.actuator.available_teams > 0 else 0
+                action_idx = globals.q_table[state].index(max(globals.q_table[state]))
+                
 
         instruction = BrokerInstruction.UPKEEP if action_idx == 1 else BrokerInstruction.DO_NOTHING
 
@@ -130,9 +131,16 @@ class Broker:
             self.alpha * (target - old_value)
 
         # if (not globals.is_training):
-        #     self.epsilon = 0.0000001  # max(0.000001, self.epsilon * 0.999999)
+        #     self.epsilon = 0.0000001  # max(0.000001, self.epsilon * 0.99999999)
         if (reward > 0):
-            self.epsilon = max(0.000001, self.epsilon * 0.9999999)
+            self.epsilon = max(
+                0.000001, self.epsilon * 0.999999995) if globals.is_training else 0.000001
+            globals.total_positive_reward += reward
+            globals.total_positive_reward_qty += 1
+        else:
+            globals.total_non_positive_reward += reward
+            globals.total_non_positive_reward_qty += 1
+        globals.total_reward += reward
         
 
         return True
