@@ -190,7 +190,8 @@ export function SimulationProvider({children}: {children: ReactNode}) {
           .then((res) => res.json())
           .then((data) => {
             setData(data);
-            if (!data.is_training) showLogs(data.logs);
+            // if (!data.is_training) showLogs(data.logs);
+            showLogs(data.logs);
             fetcherRequests--;
           });
         fetcherRequests++;
