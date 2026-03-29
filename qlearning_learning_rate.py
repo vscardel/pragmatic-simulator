@@ -1,15 +1,20 @@
 import pandas
 import matplotlib.pyplot as plt
-import matplotlib
+import matplotlib.ticker as ticker
 import numpy as np
 from io import StringIO
 from metrics import ms_to_hours, format_hours_minutes
+
 
 def ms_to_years(time_ms: int):
     return time_ms/31540000000
 
 def ms_to_months(time_ms: int):
     return time_ms/2628000000
+
+
+def format_k(x, pos):
+    return f'{x*1e-3:g}k'
 
 results_file = "results-qlearning-learning-3years-4months.csv"
 sensors_config_file = "sensors_config.json"
@@ -68,7 +73,7 @@ for i in range(len(total_reward_column[2:])):
     y4[i] = qtable_size[i]
 
 
-fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2)
+fig, (ax1,ax2,ax4) = plt.subplots(1,3)
 
 ax1.set_title("Total recompensa por hora")
 ax1.plot(x,y)
@@ -81,15 +86,16 @@ ax2.plot(x,y2)
 ax2.set_xlabel("Tempo (Anos)")
 ax2.set_ylabel("Manutenções")
 
-ax3.set_title("Q-Learning Epsilon (ε)")
-ax3.plot(x,y3)
-ax3.set_xlabel("Tempo (Anos)")
-ax3.set_ylabel("Epsilon (ε)")
+# ax3.set_title("Q-Learning Epsilon (ε)")
+# ax3.plot(x,y3)
+# ax3.set_xlabel("Tempo (Anos)")
+# ax3.set_ylabel("Epsilon (ε)")
 
 ax4.set_title("Tamanho Q-Table")
 ax4.plot(x,y4)
 ax4.set_xlabel("Tempo (Anos)")
 ax4.set_ylabel("Estados explorados")
+ax4.yaxis.set_major_formatter(ticker.FuncFormatter(format_k))
 
 # ax5.set_title("Tempo com equipes disponíveis")
 # ax5.plot(x,y5)

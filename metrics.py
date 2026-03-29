@@ -36,12 +36,12 @@ def autolabel_minutes(bars, ax):
                     ha='center', va='bottom', fontsize=9)
 
 
-def autolabel_mixed(bars, ax, pct_idx=1):
+def autolabel_mixed(bars, ax, pct_idx=0, total=0):
     """Adiciona rótulos: 'Xh Ym' para horas, 'Z%' para porcentagem"""
     for i, bar in enumerate(bars):
         height = bar.get_height()
         if i == pct_idx:
-            label_text = f"{height:.1f}%"
+            label_text = f"{height / total * 100:.1f}%"
         else:
             label_text = format_hours_minutes(height)
 
@@ -119,25 +119,22 @@ def plot_comparisons(file_human, file_qlearning):
     # =========================================================================
     # GRÁFICO 3: Barras - Seções Diversas (Manutenção e Equipes)
     # =========================================================================
-    ax3 = axs[1, 0]
+    ax3 = axs[1, 1]
 
     # Cálculos Humano
     human_maint_time_h = ms_to_hours(last_human['total_maintenance_time'])
-    human_unnec_maint_pct = (last_human['unnecessary_maintenances'] /
-                             last_human['total_maintenances'] * 100) if last_human['total_maintenances'] > 0 else 0
+    human_unnec_maint_pct = last_human['unnecessary_maintenances'] 
     human_avail_time_h = ms_to_hours(last_human['time_with_available_teams'])
 
     # Cálculos QLearning
     ql_maint_time_h = ms_to_hours(last_ql['total_maintenance_time'])
-    ql_unnec_maint_pct = (last_ql['unnecessary_maintenances'] /
-                          last_ql['total_maintenances'] * 100) if last_ql['total_maintenances'] > 0 else 0
+    ql_unnec_maint_pct = last_ql['unnecessary_maintenances'] 
     ql_avail_time_h = ms_to_hours(last_ql['time_with_available_teams'])
 
-    categories_3 = ['Tempo total em Manutenção',
-                    'Manutenções Desnecessárias', 'Tempo c/ equipes Disponíveis']
-    human_vals = [human_maint_time_h,
-                  human_unnec_maint_pct, human_avail_time_h]
-    ql_vals = [ql_maint_time_h, ql_unnec_maint_pct, ql_avail_time_h]
+    categories_3 = ['']
+    human_vals = [
+                  human_unnec_maint_pct]
+    ql_vals = [ ql_unnec_maint_pct]
 
     x3 = np.arange(len(categories_3))
 
@@ -146,21 +143,21 @@ def plot_comparisons(file_human, file_qlearning):
     bars_ql_3 = ax3.bar(x3 + width/2, ql_vals, width,
                         color=color_ql, label=label_ql)
 
-    ax3.set_title('Métricas de Manutenção e Equipe Disponível')
+    ax3.set_title('Manutenções desnecessárias')
     ax3.set_xticks(x3)
     ax3.set_xticklabels(categories_3)
     ax3.legend()
 
-    autolabel_mixed(bars_human_3, ax3)
-    autolabel_mixed(bars_ql_3, ax3)
+    autolabel_mixed(bars_human_3, ax3, total=last_human['total_maintenances'])
+    autolabel_mixed(bars_ql_3, ax3, total=last_ql['total_maintenances'])
 
-    # Oculta eixo Y do gráfico 3 para focar nos labels
-    ax3.set_yticks([])
+    # # Oculta eixo Y do gráfico 3 para focar nos labels
+    # ax3.set_yticks([])
 
     # =========================================================================
     # GRÁFICO 4: Linha - available_teams vs time (em horas)
     # =========================================================================
-    ax4 = axs[1, 1]
+    ax4 = axs[1, 0]
     ax4.plot(ms_to_hours(df_human['time']), df_human['available_teams'],
              color=color_human, label=label_human, alpha=0.8)
     ax4.plot(ms_to_hours(df_ql['time']), df_ql['available_teams'],
